@@ -9,8 +9,12 @@ COPY ./install/multimedia.sh ./install/multimedia.sh
 RUN ./install/multimedia.sh
 
 COPY ./install/development.sh ./install/development.sh
-COPY ./repos/docker-ce.repo /build/repos/docker-ce.repo
 COPY ./repos/vscode.repo /build/repos/vscode.repo
 RUN ./install/development.sh
+
+COPY ./install/containers.sh ./install/containers.sh
+COPY ./repos/docker-ce.repo /build/repos/docker-ce.repo
+RUN ./install/containers.sh
+
 
 RUN rm -rf /build

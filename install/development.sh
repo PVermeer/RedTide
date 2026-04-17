@@ -4,10 +4,9 @@
 script_dir=$(dirname "$0")
 source "${script_dir}/../scripts/env.sh"
 
-vscode_repo_file="/etc/yum.repos.d/vscode.repo"
-cp $BUILD_DIR/repos/vscode.repo $vscode_repo_file
+enable_repo_extern vscode.repo code
 rpm-ostree install code
-rm $vscode_repo_file
+disable_repo_extern vscode.repo code
 
 rpm-ostree install \
 	git \

@@ -1,0 +1,10 @@
+[copr:copr.fedorainfracloud.org:pvermeer:virtual-display]
+name=Copr repo for virtual-display owned by pvermeer
+baseurl=https://download.copr.fedorainfracloud.org/results/pvermeer/virtual-display/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/pvermeer/virtual-display/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1

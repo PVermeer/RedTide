@@ -10,18 +10,28 @@ rpm-ostree install code
 rm $vscode_repo_file
 
 rpm-ostree install \
+	git \
+	jq \
+	curl \
 	shellcheck \
 	shfmt \
 	flatpak-builder \
+	dnf-plugins-core \
 	rpmdevtools \
 	rpmlint \
 	gh \
 	rustup \
+	gcc \
+	gcc-c++ \
 	make \
 	cmake \
 	clang \
+	python3 \
 	python3-pip \
 	pipx \
-	doxygen
+	doxygen \
+	micromamba \
+	nodejs \
+	npm
 
 ostree container commit

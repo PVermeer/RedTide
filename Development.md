@@ -12,7 +12,7 @@ insecure = true
 ```
 ## Podman
 
-### Run local registery for rebase
+### Run local registery for rebase / update
 ```sh
 podman container run -dt -p 5000:5000 --name registry docker.io/library/registry:2
 
@@ -26,7 +26,7 @@ podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .
 podman push --format=oci localhost:5000/redtide:latest
 ```
 
-## Rebase
+## Rebase / update
 ```sh
 rpm-ostree rebase ostree-unverified-registry:localhost:5000/redtide:latest
 

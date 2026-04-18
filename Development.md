@@ -21,7 +21,7 @@ podman container start registry
 ```
 ### Build and push image to registry
 ```sh
-podman build -f ./Containerfile -t localhost:5000/redtide:latest .
+podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .
 
 podman push --format=oci localhost:5000/redtide:latest
 ```

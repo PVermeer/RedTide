@@ -6,19 +6,10 @@
         {
             "label": "Build image with docker",
             "type": "shell",
-            "command": "podman build -f ./Containerfile -t localhost:5000/redtide:latest .",
+            "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
-        },
-        {
-            "label": "Build image with docker and no cache",
-            "type": "shell",
-            "command": "podman build --no-cache -f ./Containerfile -t localhost:5000/redtide:latest .",
-            "group": {
-                "kind": "build",
-                "isDefault": false
             }
         }
     ]

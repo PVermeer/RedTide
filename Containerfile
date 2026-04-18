@@ -2,8 +2,10 @@ FROM quay.io/fedora/fedora-silverblue:latest
 
 RUN mkdir /build
 WORKDIR /build
-
 COPY ./scripts /build/scripts
+
+RUN --mount=type=cache,dst=/var/cache \
+    rm -rf /var/cache/*
 
 COPY ./install/multimedia.sh ./install/multimedia.sh
 RUN --mount=type=cache,dst=/var/cache \

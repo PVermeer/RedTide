@@ -4,6 +4,8 @@
 script_dir=$(dirname "$0")
 source "${script_dir}/../scripts/env.sh"
 
+echo_color "==== Installing multimedia packages ===="
+
 rpm-ostree install \
 	libva-utils \
 	"https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_VERSION}.noarch.rpm" \

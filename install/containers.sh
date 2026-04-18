@@ -4,6 +4,8 @@
 script_dir=$(dirname "$0")
 source "${script_dir}/../scripts/env.sh"
 
+echo_color "==== Installing container packages ===="
+
 enable_repo_extern docker-ce.repo docker-ce-stable
 rpm-ostree install \
 	docker-ce \

@@ -4,6 +4,8 @@
 script_dir=$(dirname "$0")
 source "${script_dir}/../scripts/env.sh"
 
+echo_color "==== Installing gaming packages ===="
+
 enable_repo rpmfusion-nonfree-steam.repo rpmfusion-nonfree-steam
 rpm-ostree install \
 	steam \

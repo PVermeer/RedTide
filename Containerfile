@@ -30,4 +30,8 @@ COPY ./repos/pvermeer-gamescope-session-guide.repo /build/repos/pvermeer-gamesco
 RUN --mount=type=cache,dst=/var/cache \
     ./install/gaming.sh
 
+COPY ./install/gnome-extensions.sh ./install/gnome-extensions.sh
+RUN --mount=type=cache,dst=/var/cache \
+    ./install/gnome-extensions.sh
+
 RUN rm -rf /build

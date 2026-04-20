@@ -1,0 +1,8 @@
+- repo: fedora
+  install:
+    - gnome-shell-extension-appindicator
+    - gnome-shell-extension-caffeine
+    - gnome-shell-extension-unite
+    - gnome-shell-extension-blur-my-shell
+    - gnome-shell-extension-just-perfection
+    - gnome-shell-extension-screen-autorotate

@@ -1,37 +1,33 @@
 FROM quay.io/fedora/fedora-silverblue:latest
 
-RUN mkdir /build
-WORKDIR /build
-COPY ./scripts /build/scripts
+ENV BUILD_DIR=/build
+ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
+ENV PACKAGES_DIR=${BUILD_DIR}/packages
+ENV REPOS_DIR=${BUILD_DIR}/repos
+ENV PATH=${PATH}:${BUILD_DIR}/scripts
+
+COPY ./scripts $SCRIPTS_DIR
+COPY ./packages $PACKAGES_DIR
+COPY ./repos $REPOS_DIR
+
+WORKDIR $BUILD_DIR
 
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
 
-COPY ./install/multimedia.sh ./install/multimedia.sh
 RUN --mount=type=cache,dst=/var/cache \
-    ./install/multimedia.sh
+    install-packages containers.yml
 
-COPY ./install/development.sh ./install/development.sh
-COPY ./repos/vscode.repo /build/repos/vscode.repo
 RUN --mount=type=cache,dst=/var/cache \
-    ./install/development.sh
+    install-packages development.yml
 
-COPY ./install/containers.sh ./install/containers.sh
-COPY ./repos/docker-ce.repo /build/repos/docker-ce.repo
 RUN --mount=type=cache,dst=/var/cache \
-    ./install/containers.sh
+    install-packages gaming.yml
 
-COPY ./install/gaming.sh ./install/gaming.sh
-COPY ./repos/ilyaz-LACT.repo /build/repos/ilyaz-LACT.repo
-COPY ./repos/faugus-faugus-launcher.repo /build/repos/faugus-faugus-launcher.repo
-COPY ./repos/pvermeer-sunshine.repo /build/repos/pvermeer-sunshine.repo
-COPY ./repos/pvermeer-virtual-display.repo /build/repos/pvermeer-virtual-display.repo
-COPY ./repos/pvermeer-gamescope-session-guide.repo /build/repos/pvermeer-gamescope-session-guide.repo
 RUN --mount=type=cache,dst=/var/cache \
-    ./install/gaming.sh
+    install-packages gnome-extensions.yml
 
-COPY ./install/gnome-extensions.sh ./install/gnome-extensions.sh
 RUN --mount=type=cache,dst=/var/cache \
-    ./install/gnome-extensions.sh
+    install-packages multimedia.yml
 
-RUN rm -rf /build
+RUN rm -rf $BUILD_DIR

@@ -1,0 +1,26 @@
+- repo: fedora
+  install:
+    - gamescope
+    - gamemode
+    - mangohud
+
+- repo: rpmfusion-nonfree-steam
+  repo_file: rpmfusion-nonfree-steam.repo
+  install:
+    - steam
+    - steam-devices
+
+- repo: copr:copr.fedorainfracloud.org:pvermeer:gamescope-session-guide
+  repo_file: pvermeer-gamescope-session-guide.repo
+  install:
+    - gamescope-session-guide
+
+- repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
+  repo_file: pvermeer-sunshine.repo
+  install:
+    - sunshine
+
+- repo: copr:copr.fedorainfracloud.org:pvermeer:virtual-display
+  repo_file: pvermeer-virtual-display.repo
+  install:
+    - virtual-display

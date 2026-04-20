@@ -4,13 +4,28 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build image with docker",
+            "label": "Build image with podman",
             "type": "shell",
             "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Build test with log",
+            "type": "shell",
+            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build-log.txt",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Podman clean",
+            "type": "shell",
+            "command": "podman system prune -af --volumes && podman image prune -af --build-cache --external",
+            "problemMatcher": []
         }
     ]
 }

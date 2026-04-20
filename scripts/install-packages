@@ -1,0 +1,125 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+source "${SCRIPTS_DIR}/env.sh"
+
+package_config="${PACKAGES_DIR}/${1}"
+echo_color "==== Installing packages from $package_config ===="
+
+if [ ! -f "$package_config" ]; then
+	echo_error "Config file not found: $package_config"
+	exit 1
+fi
+
+enable_repo() {
+	local repo_file_name=$1
+	local repo_name=$2
+
+	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
+
+	echo_color "Enabling repo '$repo_name' in $repo_file_destination"
+	check_arguments "$1" "$2"
+
+	if [ ! -f "$repo_file_destination" ]; then
+		echo_error "Repo file for '$repo_name' not found: $repo_file_destination"
+		return 1
+	fi
+
+	sed -i "/^\[$repo_name\]/,/^\[/ s/enabled=0/enabled=1/" "$repo_file_destination"
+}
+
+disable_repo() {
+	local repo_file_name=$1
+	local repo_name=$2
+
+	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
+
+	echo_color "Disabling repo '$repo_name' in $repo_file_destination"
+	check_arguments "$1" "$2"
+
+	if [ ! -f "$repo_file_destination" ]; then
+		echo_error "Repo file for '$repo_name' not found: $repo_file_destination"
+		return 1
+	fi
+
+	sed -i "/^\[$repo_name\]/,/^\[/ s/enabled=1/enabled=0/" "$repo_file_destination"
+}
+
+enable_repo_extern() {
+	local repo_file_name=$1
+	local repo_name=$2
+
+	local repo_file_source="${REPOS_DIR}/${repo_file_name}"
+	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
+
+	echo_color "Installing external repo '$repo_name' in $repo_file_source"
+	check_arguments "$1" "$2"
+
+	if [ ! -f "$repo_file_source" ]; then
+		echo_error "Repo source file for '$repo_name' not found: $repo_file_source"
+		return 1
+	fi
+
+	cp "$repo_file_source" "$repo_file_destination"
+	
+	enable_repo "$repo_file_name" "$repo_name"
+}
+
+disable_repo_extern() {
+	local repo_file_name=$1
+	local repo_name=$2
+
+	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
+	check_arguments "$1" "$2"
+
+	echo_color "Removing external repo '$repo_name' in $repo_file_destination"
+
+	rm "$repo_file_destination"
+}
+
+readarray repos < <(yq -o=j -I=0 '.[]' "$package_config")
+for repo_packages in "${repos[@]}"; do
+	# repo is a single json snippet
+	repo=$(echo "$repo_packages" | yq '.repo' -)
+	repo_file=$(echo "$repo_packages" | yq '.repo_file' -)
+	readarray -t packages_install < <(echo "$repo_packages" | yq '.install[]' | envsubst)
+	readarray -t packages_remove < <(echo "$repo_packages" | yq '.remove[]' | envsubst)
+
+	if [ -z "${packages_install[*]}" ] \
+		&& [ -z "${packages_remove[*]}" ];
+	then
+		echo_error "No packages defined for '$repo'"
+		exit 1
+	fi
+
+	if [ -n "${packages_remove[*]}" ]; then
+		echo_color "Removing packages for '$repo'"
+
+		rpm-ostree override remove "${packages_remove[@]}"
+	fi
+
+	if [ -n "${packages_install[*]}" ]; then
+		echo_color "Installing packages for '$repo'"
+
+		if [ "$repo" = "fedora" ]; then
+			rpm-ostree install "${packages_install[@]}"
+			continue
+		fi
+
+		if [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
+			enable_repo "$repo_file" "$repo"
+			rpm-ostree install "${packages_install[@]}"
+			disable_repo "$repo_file" "$repo"
+			continue
+		fi
+
+		enable_repo_extern "$repo_file" "$repo"
+		rpm-ostree install "${packages_install[@]}"
+		disable_repo_extern "$repo_file" "$repo"
+	fi
+done
+
+echo_color "Commiting changes to container"
+ostree container commit

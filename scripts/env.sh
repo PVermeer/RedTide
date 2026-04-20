@@ -4,12 +4,30 @@ set -o pipefail
 
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 source "${script_dir}/bash-color.sh"
+source "${script_dir}/deps.sh"
 
+if [ -z "$BUILD_DIR" ]; then
+	echo_error "BUILD_DIR not defined in Containerfile"
+	exit 1
+fi
+if [ -z "$SCRIPTS_DIR" ]; then
+	echo_error "SCRIPTS_DIR not defined in Containerfile"
+	exit 1
+fi
+if [ -z "$PACKAGES_DIR" ]; then
+	echo_error "PACKAGES_DIR not defined in Containerfile"
+	exit 1
+fi
+if [ -z "$REPOS_DIR" ]; then
+	echo_error "REPOS_DIR not defined in Containerfile"
+	exit 1
+fi
+
+export DISTRO_NAME
 export FEDORA_VERSION
-export BUILD_DIR
 
+DISTRO_NAME="RedTide"
 FEDORA_VERSION="$(rpm -E %fedora)"
-BUILD_DIR="/build"
 
 echo_color "FEDORA_VERSION=$FEDORA_VERSION"
 
@@ -20,54 +38,4 @@ check_arguments() {
 			return 1
 		fi
 	done
-}
-
-enable_repo() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	echo_color "Enabling repo $repo_name in $repo_file_name"
-	check_arguments "$1" "$2"
-
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-
-	sed -i "/^\[$repo_name\]/,/^\[/ s/enabled=0/enabled=1/" "$repo_file_destination"
-}
-
-disable_repo() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	echo_color "Disabling repo $repo_name in $repo_file_name"
-	check_arguments "$1" "$2"
-
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-
-	sed -i "/^\[$repo_name\]/,/^\[/ s/enabled=1/enabled=0/" "$repo_file_destination"
-}
-
-enable_repo_extern() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	echo_color "Enabling external repo $repo_name in $repo_file_name"
-	check_arguments "$1" "$2"
-
-	local repo_file_source="${BUILD_DIR}/repos/${repo_file_name}"
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-
-	cp "$repo_file_source" "$repo_file_destination"
-	enable_repo "$repo_file_name" "$repo_name"
-}
-
-disable_repo_extern() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-	check_arguments "$1" "$2"
-
-	echo_color "Disabling external repo $repo_name in $repo_file_name"
-
-	rm "$repo_file_destination"
 }

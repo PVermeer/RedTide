@@ -1,0 +1,31 @@
+- repo: fedora
+  install:
+    - git
+    - jq
+    - yq
+    - curl
+    - shellcheck
+    - shfmt
+    - flatpak-builder
+    - dnf-plugins-core
+    - rpmdevtools
+    - rpmlint
+    - gh
+    - rustup
+    - gcc
+    - gcc-c++
+    - make
+    - cmake
+    - clang
+    - python3
+    - python3-pip
+    - pipx
+    - doxygen
+    - micromamba
+    - nodejs
+    - npm
+
+- repo: code
+  repo_file: vscode.repo
+  install:
+    - code

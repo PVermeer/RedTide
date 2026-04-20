@@ -1,0 +1,12 @@
+- repo: fedora
+  install:
+    - distrobox
+
+- repo: docker-ce-stable
+  repo_file: docker-ce.repo
+  install:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin

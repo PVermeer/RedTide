@@ -63,7 +63,7 @@ enable_repo_extern() {
 	fi
 
 	cp "$repo_file_source" "$repo_file_destination"
-	
+
 	enable_repo "$repo_file_name" "$repo_name"
 }
 
@@ -86,39 +86,93 @@ for repo_packages in "${repos[@]}"; do
 	repo_file=$(echo "$repo_packages" | yq '.repo_file' -)
 	readarray -t packages_install < <(echo "$repo_packages" | yq '.install[]' | envsubst)
 	readarray -t packages_remove < <(echo "$repo_packages" | yq '.remove[]' | envsubst)
+	readarray -t packages_extensions < <(echo "$repo_packages" | yq '.extensions[]' | envsubst)
 
-	if [ -z "${packages_install[*]}" ] \
-		&& [ -z "${packages_remove[*]}" ];
-	then
+	# Extensions
+	if [ -n "${packages_extensions[*]}" ]; then
+		echo_color "Installing extensions from '$repo'"
+
+		for extension in "${packages_extensions[@]}"; do
+			packages_install+=("$(echo "$extension" | yq '.package' -)")
+		done
+	fi
+
+	## Packages
+	if [ -z "${packages_install[*]}" ] &&
+		[ -z "${packages_remove[*]}" ]; then
 		echo_error "No packages defined for '$repo'"
 		exit 1
 	fi
 
-	if [ -n "${packages_remove[*]}" ]; then
-		echo_color "Removing packages for '$repo'"
+	# Packages - replace
+	if [ -n "${packages_remove[*]}" ] && [ -n "${packages_install[*]}" ]; then
+		if [ -n "${packages_install[*]}" ]; then
+			echo_color "Replacing packages from '$repo'"
 
-		rpm-ostree override remove "${packages_remove[@]}"
-	fi
+			if [ "$repo" = "fedora" ]; then
+				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
 
-	if [ -n "${packages_install[*]}" ]; then
-		echo_color "Installing packages for '$repo'"
+			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
+				enable_repo "$repo_file" "$repo"
+				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
+				disable_repo "$repo_file" "$repo"
 
-		if [ "$repo" = "fedora" ]; then
-			rpm-ostree install "${packages_install[@]}"
-			continue
+			else
+				enable_repo_extern "$repo_file" "$repo"
+				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
+				disable_repo_extern "$repo_file" "$repo"
+			fi
+		fi
+	else
+		# Packages - remove
+		if [ -n "${packages_remove[*]}" ]; then
+			echo_color "Removing packages for '$repo'"
+			rpm-ostree override remove "${packages_remove[@]}"
 		fi
 
-		if [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-			enable_repo "$repo_file" "$repo"
-			rpm-ostree install "${packages_install[@]}"
-			disable_repo "$repo_file" "$repo"
-			continue
-		fi
+		# Packages - install
+		if [ -n "${packages_install[*]}" ]; then
+			echo_color "Installing packages from '$repo'"
 
-		enable_repo_extern "$repo_file" "$repo"
-		rpm-ostree install "${packages_install[@]}"
-		disable_repo_extern "$repo_file" "$repo"
+			if [ "$repo" = "fedora" ]; then
+				rpm-ostree install "${packages_install[@]}"
+
+			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
+				enable_repo "$repo_file" "$repo"
+				rpm-ostree install "${packages_install[@]}"
+				disable_repo "$repo_file" "$repo"
+
+			else
+				enable_repo_extern "$repo_file" "$repo"
+				rpm-ostree install "${packages_install[@]}"
+				disable_repo_extern "$repo_file" "$repo"
+			fi
+		fi
 	fi
+
+	# Extension config
+	if [ -n "${packages_extensions[*]}" ]; then
+		echo_color "Enabling extensions"
+
+		enabled_extension_ids="["
+		for extension in "${packages_extensions[@]}"; do
+			id=$(echo "$extension" | yq '.id' -)
+			should_enable=$(echo "$extension" | yq '.enable' -)
+			if [ "$should_enable" = "true" ]; then
+				if [ "${#enabled_extension_ids}" -gt 1 ]; then
+					enabled_extension_ids+=", "
+				fi
+				enabled_extension_ids+="'$id'"
+			fi
+		done
+		enabled_extension_ids+="]"
+
+		cat <<-EOF >>/usr/share/glib-2.0/schemas/org.gnome.shell.gschema.override
+			[org/gnome/shell]
+			enabled-extensions=${enabled_extension_ids}
+		EOF
+	fi
+
 done
 
 echo_color "Commiting changes to container"

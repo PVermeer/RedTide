@@ -33,3 +33,8 @@ rpm-ostree rebase ostree-unverified-registry:localhost:5000/redtide:latest
 # Or upgrade if already rebased
 rpm-ostree upgrade
 ```
+
+## Cleanup
+```sh
+podman system prune -af
+```

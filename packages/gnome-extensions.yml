@@ -1,8 +1,20 @@
 - repo: fedora
-  install:
-    - gnome-shell-extension-appindicator
-    - gnome-shell-extension-caffeine
-    - gnome-shell-extension-unite
-    - gnome-shell-extension-blur-my-shell
-    - gnome-shell-extension-just-perfection
-    - gnome-shell-extension-screen-autorotate
+  extensions:
+    - id: appindicatorsupport@rgcjonas.gmail.com
+      package: gnome-shell-extension-appindicator
+      enable: true
+
+    - id: caffeine@patapon.info
+      package: gnome-shell-extension-caffeine
+      enable: true
+
+    - id: blur-my-shell@aunetx
+      package: gnome-shell-extension-blur-my-shell
+      enable: true
+
+    - id: just-perfection-desktop@just-perfection
+      package: gnome-shell-extension-just-perfection
+      enable: true
+
+    - id: screen-rotate@shyzus.github.io
+      package: gnome-shell-extension-screen-autorotate

@@ -13,7 +13,16 @@
             }
         },
         {
-            "label": "Build test with log",
+            "label": "Build image with podman (no-cache)",
+            "type": "shell",
+            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build test with log file (no-cache)",
             "type": "shell",
             "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build-log.txt",
             "group": {

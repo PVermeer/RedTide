@@ -1,22 +1,31 @@
 # Local image build and test
 
-## Prepare VM Silverblue
+## Prepare config
+On host and VM
 ```sh
 sudo nano /etc/containers/registries.conf
 ```
 Add
 ```toml
 [[registry]]
-location = "localhost:5000"
+location = "<host-ip or localhost>:5000"
 insecure = true
 ```
+If on remote / VM host-ip is:
+```sh
+ip route | grep default | awk '{print $3}'
+```
+
 ## Podman
 
 ### Run local registery for rebase / update
 ```sh
-podman container run -dt -p 5000:5000 --name registry docker.io/library/registry:2
+podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/li
+brary/registry:2
+```
 
-# Or start if already installed
+Or start if already installed
+```sh
 podman container start registry
 ```
 ### Build and push image to registry
@@ -28,9 +37,11 @@ podman push --format=oci localhost:5000/redtide:latest
 
 ## Rebase / update
 ```sh
-rpm-ostree rebase ostree-unverified-registry:localhost:5000/redtide:latest
+rpm-ostree rebase ostree-unverified-registry:<host-ip or localhost>:5000/redtide:latest
+```
 
-# Or upgrade if already rebased
+Or upgrade if already rebased (registry must be running on host)
+```sh
 rpm-ostree upgrade
 ```
 

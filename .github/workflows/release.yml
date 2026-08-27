@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Prep
+        run: |
+          echo "BUILD_DATE=$(date +%Y%m%d)" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/pvermeer/redtide" >> "$GITHUB_ENV"
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build
+        run: |
+          podman build --pull -f ./Containerfile -t "${IMAGE}:latest" -t "${IMAGE}:${BUILD_DATE}" .
+
+      - name: Push
+        run: |
+          podman push --format=oci "${IMAGE}:latest"
+          podman push --format=oci "${IMAGE}:${BUILD_DATE}"

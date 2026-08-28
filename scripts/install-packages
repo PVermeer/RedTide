@@ -154,23 +154,34 @@ for repo_packages in "${repos[@]}"; do
 	if [ -n "${packages_extensions[*]}" ]; then
 		echo_color "Enabling extensions"
 
-		enabled_extension_ids="["
+		enabled_extension_ids=()
 		for extension in "${packages_extensions[@]}"; do
 			id=$(echo "$extension" | yq '.id' -)
 			should_enable=$(echo "$extension" | yq '.enable' -)
 			if [ "$should_enable" = "true" ]; then
-				if [ "${#enabled_extension_ids}" -gt 1 ]; then
-					enabled_extension_ids+=", "
-				fi
-				enabled_extension_ids+="'$id'"
+				enabled_extension_ids+=("$id")
 			fi
 		done
-		enabled_extension_ids+="]"
 
-		cat <<-EOF >>/usr/share/glib-2.0/schemas/org.gnome.shell.gschema.override
-			[org/gnome/shell]
-			enabled-extensions=${enabled_extension_ids}
-		EOF
+		override_file=/usr/share/glib-2.0/schemas/org.gnome.shell.gschema.override
+		key='."org.gnome.shell"."enabled-extensions"'
+
+		# Read current value, strip outer brackets
+		current_value=$(yq --input-format=ini --output-format=ini "$key" "$override_file")
+		current_value="${current_value#[}"
+		current_value="${current_value%]}"
+
+		new_value=$current_value
+
+		# Append extension id's
+		for extension_id in "${enabled_extension_ids[@]}"; do
+			new_value="${new_value}, '${extension_id}'"
+		done
+
+		# Write to override file
+		yq -i --input-format=ini --output-format=ini ''"$key"' = "'"[$new_value]"'"' "$override_file"
+
+		cat $override_file
 	fi
 
 done

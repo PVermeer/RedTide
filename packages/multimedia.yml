@@ -3,6 +3,7 @@
 - repo: fedora
   install:
     - libva-utils
+    - vulkan-tools
     - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_VERSION}.noarch.rpm"
     - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_VERSION}.noarch.rpm"
 
@@ -29,6 +30,12 @@
     - ffmpeg-free
   install:
     - ffmpeg
+
+- repo: fedora
+  install:
+    - mesa-vulkan-drivers-freeworld
+  remove:
+    - mesa-vulkan-drivers
 
 - repo: fedora
   remove:

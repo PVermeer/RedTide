@@ -163,25 +163,21 @@ for repo_packages in "${repos[@]}"; do
 			fi
 		done
 
-		override_file=/usr/share/glib-2.0/schemas/org.gnome.shell.gschema.override
-		key='."org.gnome.shell"."enabled-extensions"'
+		dconf_dir="/etc/dconf/db/local.d"
+		dconf_file="$dconf_dir/00-gnome-shell"
 
-		# Read current value, strip outer brackets
-		current_value=$(yq --input-format=ini --output-format=ini "$key" "$override_file")
-		current_value="${current_value#[}"
-		current_value="${current_value%]}"
+		mkdir -p "$dconf_dir"
 
-		new_value=$current_value
+		printf -v extensions_dconf "'%s'," "${enabled_extension_ids[@]}"
+		extensions_dconf="[${extensions_dconf%,}]"
 
-		# Append extension id's
-		for extension_id in "${enabled_extension_ids[@]}"; do
-			new_value="${new_value}, '${extension_id}'"
-		done
+		cat <<-EOF >>"$dconf_file"
+			[org/gnome/shell]
+			enabled-extensions=${extensions_dconf}
+		EOF
 
-		# Write to override file
-		yq -i --input-format=ini --output-format=ini ''"$key"' = "'"[$new_value]"'"' "$override_file"
-
-		cat $override_file
+		cat "$dconf_file"
+		dconf update
 	fi
 
 done

@@ -22,9 +22,18 @@
             }
         },
         {
+            "label": "Push latest image to local registry",
+            "type": "shell",
+            "command": "podman container start registry || podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:2 && podman push --format=oci localhost:5000/redtide:latest",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Build test with log file (no-cache)",
             "type": "shell",
-            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build-log.txt",
+            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
             "group": {
                 "kind": "test",
                 "isDefault": true

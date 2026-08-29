@@ -14,7 +14,7 @@
 
     - id: just-perfection-desktop@just-perfection
       package: gnome-shell-extension-just-perfection
-      enable: true
+      enable: false
 
     - id: screen-rotate@shyzus.github.io
       package: gnome-shell-extension-screen-autorotate

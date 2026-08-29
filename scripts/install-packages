@@ -3,10 +3,12 @@
 set -e
 set -o pipefail
 
-source "${SCRIPTS_DIR}/env.sh"
+yml_file=$1
 
-package_config="${PACKAGES_DIR}/${1}"
-echo_color "==== Installing packages from $package_config ===="
+source "${SCRIPTS_DIR}/env.sh"
+source "${SCRIPTS_DIR}/gnome-extensions.sh"
+
+package_config="${PACKAGES_DIR}/${yml_file}"
 
 if [ ! -f "$package_config" ]; then
 	echo_error "Config file not found: $package_config"
@@ -78,6 +80,8 @@ disable_repo_extern() {
 
 	rm "$repo_file_destination"
 }
+
+echo_color "\n==== Installing $yml_file ====\n"
 
 readarray repos < <(yq -o=j -I=0 '.[]' "$package_config")
 for repo_packages in "${repos[@]}"; do
@@ -151,34 +155,7 @@ for repo_packages in "${repos[@]}"; do
 	fi
 
 	# Extension config
-	if [ -n "${packages_extensions[*]}" ]; then
-		echo_color "Enabling extensions"
-
-		enabled_extension_ids=()
-		for extension in "${packages_extensions[@]}"; do
-			id=$(echo "$extension" | yq '.id' -)
-			should_enable=$(echo "$extension" | yq '.enable' -)
-			if [ "$should_enable" = "true" ]; then
-				enabled_extension_ids+=("$id")
-			fi
-		done
-
-		dconf_dir="/etc/dconf/db/local.d"
-		dconf_file="$dconf_dir/00-gnome-shell"
-
-		mkdir -p "$dconf_dir"
-
-		printf -v extensions_dconf "'%s'," "${enabled_extension_ids[@]}"
-		extensions_dconf="[${extensions_dconf%,}]"
-
-		cat <<-EOF >>"$dconf_file"
-			[org/gnome/shell]
-			enabled-extensions=${extensions_dconf}
-		EOF
-
-		cat "$dconf_file"
-		dconf update
-	fi
+	if [ -n "${packages_extensions[*]}" ]; then enable_extensions packages_extensions; fi
 
 done
 

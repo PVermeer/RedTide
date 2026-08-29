@@ -10,10 +10,10 @@
     - steam
     - steam-devices
 
-- repo: copr:copr.fedorainfracloud.org:pvermeer:gamescope-session-guide
-  repo_file: pvermeer-gamescope-session-guide.repo
+- repo: terra
+  repo_file: terra.repo
   install:
-    - gamescope-session-guide
+    - gamescope-session-steam
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
   repo_file: pvermeer-sunshine.repo

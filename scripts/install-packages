@@ -81,7 +81,7 @@ disable_repo_extern() {
 	rm "$repo_file_destination"
 }
 
-echo_color "\n==== Installing $yml_file ====\n"
+echo_color "\n==== Installing $yml_file ===="
 
 readarray repos < <(yq -o=j -I=0 '.[]' "$package_config")
 for repo_packages in "${repos[@]}"; do

@@ -37,6 +37,11 @@
   remove:
     - mesa-vulkan-drivers
 
+# 32 bit for steam
+- repo: fedora
+  install:
+    - mesa-vulkan-drivers-freeworld.i686
+
 - repo: fedora
   remove:
     - rpmfusion-free-release

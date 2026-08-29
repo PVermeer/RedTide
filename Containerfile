@@ -14,6 +14,10 @@ WORKDIR $BUILD_DIR
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
 
+COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages multimedia.yml
+
 COPY ./packages/containers.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages containers.yml
@@ -29,9 +33,5 @@ RUN --mount=type=cache,dst=/var/cache \
 COPY ./packages/gnome-extensions.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages gnome-extensions.yml
-
-COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages multimedia.yml
 
 RUN rm -rf $BUILD_DIR

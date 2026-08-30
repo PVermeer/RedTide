@@ -88,6 +88,8 @@ for repo_packages in "${repos[@]}"; do
 	# repo is a single json snippet
 	repo=$(echo "$repo_packages" | yq '.repo' -)
 	repo_file=$(echo "$repo_packages" | yq '.repo_file' -)
+	pre_install_command=$(echo "$repo_packages" | yq '.pre_install_command' -)
+	post_install_command=$(echo "$repo_packages" | yq '.post_install_command' -)
 	readarray -t packages_install < <(echo "$repo_packages" | yq '.install[]' | envsubst)
 	readarray -t packages_remove < <(echo "$repo_packages" | yq '.remove[]' | envsubst)
 	readarray -t packages_extensions < <(echo "$repo_packages" | yq '.extensions[]' | envsubst)
@@ -106,6 +108,13 @@ for repo_packages in "${repos[@]}"; do
 		[ -z "${packages_remove[*]}" ]; then
 		echo_error "No packages defined for '$repo'"
 		exit 1
+	fi
+
+	# Pre install
+	if [ ! "$pre_install_command" = "null" ]; then
+		echo_color "Running pre install command"
+		echo "$pre_install_command"
+		eval "$pre_install_command"
 	fi
 
 	# Packages - replace
@@ -156,6 +165,13 @@ for repo_packages in "${repos[@]}"; do
 
 	# Extension config
 	if [ -n "${packages_extensions[*]}" ]; then enable_extensions packages_extensions; fi
+
+	# Post install
+	if [ ! "$post_install_command" = "null" ]; then
+		echo_color "Running post install command"
+		echo "$post_install_command"
+		eval "$post_install_command"
+	fi
 
 done
 

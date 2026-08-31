@@ -34,4 +34,8 @@ COPY ./packages/gnome-extensions.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages gnome-extensions.yml
 
+COPY ./packages/utilities.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages utilities.yml
+
 RUN rm -rf $BUILD_DIR

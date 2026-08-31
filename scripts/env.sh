@@ -22,6 +22,10 @@ if [ -z "$REPOS_DIR" ]; then
 	echo_error "REPOS_DIR not defined in Containerfile"
 	exit 1
 fi
+if [ -z "$KMODS_RPM_DIR" ]; then
+	echo_error "KMODS_RPM_DIR not defined in Containerfile"
+	exit 1
+fi
 
 export DISTRO_NAME
 export FEDORA_VERSION
@@ -30,12 +34,3 @@ DISTRO_NAME="RedTide"
 FEDORA_VERSION="$(rpm -E %fedora)"
 
 echo_color "FEDORA_VERSION=$FEDORA_VERSION"
-
-check_arguments() {
-	for argument in "$@"; do
-		if [ -z "$argument" ]; then
-			echo_error "Undefined argument in function"
-			return 1
-		fi
-	done
-}

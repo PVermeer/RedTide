@@ -5,7 +5,7 @@ set -o pipefail
 
 yml_file=$1
 
-source "${SCRIPTS_DIR}/env.sh"
+source "${SCRIPTS_DIR}/utils.sh"
 source "${SCRIPTS_DIR}/gnome-extensions.sh"
 
 package_config="${PACKAGES_DIR}/${yml_file}"
@@ -14,72 +14,6 @@ if [ ! -f "$package_config" ]; then
 	echo_error "Config file not found: $package_config"
 	exit 1
 fi
-
-enable_repo() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-
-	echo_color "Enabling repo '$repo_name' in $repo_file_destination"
-	check_arguments "$1" "$2"
-
-	if [ ! -f "$repo_file_destination" ]; then
-		echo_error "Repo file for '$repo_name' not found: $repo_file_destination"
-		return 1
-	fi
-
-	sed -i "/^\[$repo_name\]/,/^\[/ s/enabled=0/enabled=1/" "$repo_file_destination"
-}
-
-disable_repo() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-
-	echo_color "Disabling repo '$repo_name' in $repo_file_destination"
-	check_arguments "$1" "$2"
-
-	if [ ! -f "$repo_file_destination" ]; then
-		echo_error "Repo file for '$repo_name' not found: $repo_file_destination"
-		return 1
-	fi
-
-	sed -i "/^\[$repo_name\]/,/^\[/ s/enabled=1/enabled=0/" "$repo_file_destination"
-}
-
-enable_repo_extern() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	local repo_file_source="${REPOS_DIR}/${repo_file_name}"
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-
-	echo_color "Installing external repo '$repo_name' in $repo_file_source"
-	check_arguments "$1" "$2"
-
-	if [ ! -f "$repo_file_source" ]; then
-		echo_error "Repo source file for '$repo_name' not found: $repo_file_source"
-		return 1
-	fi
-
-	cp "$repo_file_source" "$repo_file_destination"
-
-	enable_repo "$repo_file_name" "$repo_name"
-}
-
-disable_repo_extern() {
-	local repo_file_name=$1
-	local repo_name=$2
-
-	local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
-	check_arguments "$1" "$2"
-
-	echo_color "Removing external repo '$repo_name' in $repo_file_destination"
-
-	rm "$repo_file_destination"
-}
 
 echo_color "\n==== Installing $yml_file ===="
 
@@ -93,6 +27,7 @@ for repo_packages in "${repos[@]}"; do
 	readarray -t packages_install < <(echo "$repo_packages" | yq '.install[]' | envsubst)
 	readarray -t packages_remove < <(echo "$repo_packages" | yq '.remove[]' | envsubst)
 	readarray -t packages_extensions < <(echo "$repo_packages" | yq '.extensions[]' | envsubst)
+	readarray -t packages_kmods < <(echo "$repo_packages" | yq '.kmods[]' | envsubst)
 
 	# Extensions
 	if [ -n "${packages_extensions[*]}" ]; then
@@ -161,6 +96,38 @@ for repo_packages in "${repos[@]}"; do
 				disable_repo_extern "$repo_file" "$repo"
 			fi
 		fi
+	fi
+
+	#Kmods
+	if [ -n "${packages_kmods[*]}" ]; then
+		echo_color "Installing kmods from '$repo'"
+
+		kmod_packages_paths=()
+		for name in "${packages_kmods[@]}"; do
+			for rpm_package in "${KMODS_RPM_DIR}"/"${name}"/*.rpm; do
+				kmod_packages_paths+=("$rpm_package")
+			done
+		done
+
+		if [ -z "${kmod_packages_paths[*]}" ]; then
+			echo_error "Failed to get kmod packages in ${KMODS_RPM_DIR}/${name}/"
+			exit 1
+		fi
+
+		if [ "$repo" = "fedora" ]; then
+			rpm-ostree install "${kmod_packages_paths[@]}"
+
+		elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
+			enable_repo "$repo_file" "$repo"
+			rpm-ostree install "${kmod_packages_paths[@]}"
+			disable_repo "$repo_file" "$repo"
+
+		else
+			enable_repo_extern "$repo_file" "$repo"
+			rpm-ostree install "${kmod_packages_paths[@]}"
+			disable_repo_extern "$repo_file" "$repo"
+		fi
+
 	fi
 
 	# Extension config

@@ -16,5 +16,10 @@ for dep in "${needed_deps[@]}"; do
 done
 
 if [ ${#deps_to_install[@]} -ne 0 ]; then
-	rpm-ostree install "${deps_to_install[@]}"
+	if command -v rpm-ostree >/dev/null 2>&1; then
+		rpm-ostree install "${deps_to_install[@]}"
+	else
+		dnf -y install "${deps_to_install[@]}"
+
+	fi
 fi

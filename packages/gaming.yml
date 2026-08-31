@@ -4,16 +4,18 @@
     - gamemode
     - mangohud
 
+- repo: terra
+  repo_file: terra.repo
+  install:
+    - gamescope-session-steam
+  kmods:
+    - xone
+
 - repo: rpmfusion-nonfree-steam
   repo_file: rpmfusion-nonfree-steam.repo
   install:
     - steam
     - steam-devices
-
-- repo: terra
-  repo_file: terra.repo
-  install:
-    - gamescope-session-steam
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
   repo_file: pvermeer-sunshine.repo

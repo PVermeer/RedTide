@@ -108,14 +108,6 @@ function redirect() { exec 2>&8; }
 trap "redirect;" DEBUG
 PROMPT_COMMAND='undirect;'
 
-# Trace color `set -x`
-export BASH_XTRACEFD=1 # set -x to stdout
-exec 7> >(
-  while IFS='' read -r line || [ -n "$line" ]; do
-    echo -e "\t${tracecolor}${line}${removecolor}"
-  done
-)
-
 # Color wrapper
 echo_color() {
   local arguments=$@
@@ -146,15 +138,3 @@ echo_debug() {
   parse_arguments $arguments
   echo -e $switches "${tracecolor}$arguments${removecolor}"
 }
-
-# Trace colors for set -x
-run_debug() {
-  local BASH_XTRACEFD=7
-  local command="${@@Q}"
-  eval "$command" >&7
-}
-
-on_exit() {
-  unset BASH_XTRACEFD
-}
-trap on_exit EXIT

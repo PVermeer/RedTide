@@ -29,7 +29,7 @@ jobs:
 
       - name: Build
         run: |
-          podman build --pull -f ./Containerfile -t "${IMAGE}:latest" -t "${IMAGE}:${BUILD_DATE}" .
+          podman build -f ./Containerfile -t "${IMAGE}:latest" -t "${IMAGE}:${BUILD_DATE}" .
 
       - name: Push
         run: |

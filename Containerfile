@@ -23,7 +23,8 @@ RUN source $ENV_FILE && dnf -y --setopt=install_weak_deps=False install \
     "kernel-core-$KERNEL_VERSION" \
     "kernel-devel-$KERNEL_VERSION"
 
-COPY ./scripts $SCRIPTS_DIR
+COPY ./scripts/deps $SCRIPTS_DIR/deps
+COPY ./scripts/build-akmods $SCRIPTS_DIR/
 COPY ./repos $REPOS_DIR
 COPY ./packages $PACKAGES_DIR
 
@@ -39,7 +40,8 @@ ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV PATH=${PATH}:${BUILD_DIR}/scripts
 
 COPY --from=akmods $KMODS_RPM_DIR $KMODS_RPM_DIR
-COPY ./scripts $SCRIPTS_DIR
+COPY ./scripts/deps $SCRIPTS_DIR/deps
+COPY ./scripts/install-packages $SCRIPTS_DIR/install-packages
 COPY ./repos $REPOS_DIR
 
 RUN --mount=type=cache,dst=/var/cache \

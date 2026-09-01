@@ -3,7 +3,8 @@
 set -e
 set -o pipefail
 
-source "${SCRIPTS_DIR}/env.sh"
+script_dir=$(dirname "${BASH_SOURCE[0]}")
+source "${script_dir}/env.sh"
 
 check_arguments() {
     for argument in "$@"; do

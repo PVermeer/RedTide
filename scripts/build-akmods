@@ -6,7 +6,7 @@ set -o pipefail
 kernel_version=$1
 destination=$2
 
-source "${SCRIPTS_DIR}/utils.sh"
+source "${SCRIPTS_DIR}/deps/utils.sh"
 
 for package_config in "$PACKAGES_DIR"/*.yml; do
     echo_color "Checking for kmod packages for $package_config"

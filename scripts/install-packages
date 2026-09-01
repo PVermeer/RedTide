@@ -5,8 +5,8 @@ set -o pipefail
 
 yml_file=$1
 
-source "${SCRIPTS_DIR}/utils.sh"
-source "${SCRIPTS_DIR}/gnome-extensions.sh"
+source "${SCRIPTS_DIR}/deps/utils.sh"
+source "${SCRIPTS_DIR}/deps/gnome-extensions.sh"
 
 package_config="${PACKAGES_DIR}/${yml_file}"
 

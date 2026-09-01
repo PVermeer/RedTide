@@ -9,8 +9,8 @@
   install:
     - gamescope-session-steam
   kmods:
-    - akmod: xone
-      package: akmod-xone
+    - akmod: xonedo
+      package: akmod-xonedo
     - akmod: xpadneo
       package: akmod-xpadneo
 

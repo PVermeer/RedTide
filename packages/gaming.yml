@@ -11,6 +11,8 @@
   kmods:
     - akmod: xone
       package: akmod-xone
+    - akmod: xpadneo
+      package: akmod-xpadneo
 
 - repo: rpmfusion-nonfree-steam
   repo_file: rpmfusion-nonfree-steam.repo

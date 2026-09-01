@@ -1,4 +1,6 @@
-FROM quay.io/fedora/fedora-silverblue:latest AS kernel-version
+ARG FEDORA_MAJOR_VERSION=44
+
+FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION} AS kernel-version
 
 RUN kernel_package=$(rpm -q kernel) && \
     kernel_version=${kernel_package#kernel-} && \
@@ -6,7 +8,7 @@ RUN kernel_package=$(rpm -q kernel) && \
 
 RUN cat /tmp/environment
 
-FROM fedora AS akmods
+FROM quay.io/fedora/fedora:${FEDORA_MAJOR_VERSION} AS akmods
 
 ENV BUILD_DIR=/build
 ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
@@ -27,7 +29,7 @@ COPY ./packages $PACKAGES_DIR
 
 RUN source $ENV_FILE && build-akmods $KERNEL_VERSION $KMODS_RPM_DIR
 
-FROM quay.io/fedora/fedora-silverblue:latest
+FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION}
 
 ENV BUILD_DIR=/build
 ENV SCRIPTS_DIR=${BUILD_DIR}/scripts

@@ -6,37 +6,40 @@ set -o pipefail
 kernel_version=$1
 destination=$2
 
-source "${SCRIPTS_DIR}/deps/utils.sh"
+script_dir=$(dirname "${BASH_SOURCE[0]}")
+source "${script_dir}/deps/utils.sh"
 
 for package_config in "$PACKAGES_DIR"/*.yml; do
     echo_color "Checking for kmod packages for $package_config"
 
-    readarray repos < <(yq -o=j -I=0 '.[]' "$package_config")
-    for repo_packages in "${repos[@]}"; do
-        # repo is a single json snippet
-        repo=$(echo "$repo_packages" | yq '.repo' -)
-        repo_file=$(echo "$repo_packages" | yq '.repo_file' -)
-        readarray -t packages_kmods < <(echo "$repo_packages" | yq '.kmods[]' | envsubst)
+    mapfile -t repos < <(yq -o=json -I=0 '.[]' "$package_config")
 
-        if [ -n "${packages_kmods[*]}" ]; then
+    for repo_packages in "${repos[@]}"; do
+        # repo_packages is a single JSON snippet
+        repo=$(yq '.repo' <<<"$repo_packages")
+        repo_file=$(yq '.repo_file' <<<"$repo_packages")
+        mapfile -t kmod_packages < <(yq -r '.kmods[].package' <<<"$repo_packages")
+        mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
+
+        if [ -n "${kmod_packages[*]}" ]; then
             echo_color "Installing kmod packages for $package_config: '$repo'"
 
             if [ "$repo" = "fedora" ]; then
-                dnf -y install "${packages_kmods[@]}"
+                dnf -y install "${kmod_packages[@]}"
 
             elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
                 enable_repo "$repo_file" "$repo"
-                dnf -y install "${packages_kmods[@]}"
+                dnf -y install "${kmod_packages[@]}"
                 disable_repo "$repo_file" "$repo"
 
             else
                 enable_repo_extern "$repo_file" "$repo"
-                dnf -y install "${packages_kmods[@]}"
+                dnf -y install "${kmod_packages[@]}"
                 disable_repo_extern "$repo_file" "$repo"
             fi
         fi
 
-        for name in "${packages_kmods[@]}"; do
+        for name in "${kmod_names[@]}"; do
             echo_color "Building kmod package for '$name'"
 
             akmods --force --kernel "$kernel_version" --kmod "$name"

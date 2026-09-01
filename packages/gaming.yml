@@ -9,7 +9,8 @@
   install:
     - gamescope-session-steam
   kmods:
-    - xone
+    - akmod: xone
+      package: akmod-xone
 
 - repo: rpmfusion-nonfree-steam
   repo_file: rpmfusion-nonfree-steam.repo

@@ -17,30 +17,31 @@ fi
 
 echo_color "\n==== Installing $yml_file ===="
 
-readarray repos < <(yq -o=j -I=0 '.[]' "$package_config")
+mapfile -t repos < <(yq -o=j -I=0 '.[]' "$package_config")
 for repo_packages in "${repos[@]}"; do
 	# repo is a single json snippet
-	repo=$(echo "$repo_packages" | yq '.repo' -)
-	repo_file=$(echo "$repo_packages" | yq '.repo_file' -)
-	pre_install_command=$(echo "$repo_packages" | yq '.pre_install_command' -)
-	post_install_command=$(echo "$repo_packages" | yq '.post_install_command' -)
-	readarray -t packages_install < <(echo "$repo_packages" | yq '.install[]' | envsubst)
-	readarray -t packages_remove < <(echo "$repo_packages" | yq '.remove[]' | envsubst)
-	readarray -t packages_extensions < <(echo "$repo_packages" | yq '.extensions[]' | envsubst)
-	readarray -t packages_kmods < <(echo "$repo_packages" | yq '.kmods[]' | envsubst)
+	repo=$(yq '.repo' <<<"$repo_packages")
+	repo_file=$(yq '.repo_file' <<<"$repo_packages")
+	pre_install_command=$(yq '.pre_install_command' <<<"$repo_packages")
+	post_install_command=$(yq '.post_install_command' <<<"$repo_packages")
+	mapfile -t packages_install < <(yq '.install[]' <<<"$repo_packages" | envsubst)
+	mapfile -t packages_remove < <(yq '.remove[]' <<<"$repo_packages" | envsubst)
+	mapfile -t packages_extensions < <(yq '.extensions[]' <<<"$repo_packages" | envsubst)
+	mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
 
 	# Extensions
 	if [ -n "${packages_extensions[*]}" ]; then
 		echo_color "Installing extensions from '$repo'"
 
 		for extension in "${packages_extensions[@]}"; do
-			packages_install+=("$(echo "$extension" | yq '.package' -)")
+			packages_install+=("$(yq '.package' <<<"$extension")")
 		done
 	fi
 
 	## Packages
 	if [ -z "${packages_install[*]}" ] &&
-		[ -z "${packages_remove[*]}" ]; then
+		[ -z "${packages_remove[*]}" ] &&
+		[ -z "${kmod_names[*]}" ]; then
 		echo_error "No packages defined for '$repo'"
 		exit 1
 	fi
@@ -99,11 +100,10 @@ for repo_packages in "${repos[@]}"; do
 	fi
 
 	#Kmods
-	if [ -n "${packages_kmods[*]}" ]; then
+	if [ -n "${kmod_names[*]}" ]; then
 		echo_color "Installing kmods from '$repo'"
 
-		kmod_packages_paths=()
-		for name in "${packages_kmods[@]}"; do
+		for name in "${kmod_names[@]}"; do
 			for rpm_package in "${KMODS_RPM_DIR}"/"${name}"/*.rpm; do
 				kmod_packages_paths+=("$rpm_package")
 			done

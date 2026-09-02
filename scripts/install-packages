@@ -144,3 +144,5 @@ done
 
 echo_color "Commiting changes to container"
 ostree container commit
+
+echo_success "Successfully built: $yml_file"

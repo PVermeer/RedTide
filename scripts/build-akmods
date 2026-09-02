@@ -55,6 +55,8 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
             mkdir -p "${destination}/${name}"
             mv /var/cache/akmods/*/*.rpm "${destination}/${name}/"
             ls "${destination}/${name}/"
+
+            echo_success "Successfully built kmod: $name"
         done
     done
 

@@ -1,10 +1,11 @@
 ARG FEDORA_MAJOR_VERSION=44
 
-FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION} AS kernel-version
+FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION} AS silverblue
 
 RUN kernel_package=$(rpm -q kernel) && \
     kernel_version=${kernel_package#kernel-} && \
-    echo KERNEL_VERSION="$kernel_version" > /tmp/environment
+    echo KERNEL_VERSION="$kernel_version" > /tmp/environment && \
+    cat /etc/os-release >> /tmp/environment
 
 RUN cat /tmp/environment
 
@@ -18,7 +19,7 @@ ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV ENV_FILE=${BUILD_DIR}/environment
 ENV PATH=${PATH}:${BUILD_DIR}/scripts
 
-COPY --from=kernel-version /tmp/environment ${ENV_FILE}
+COPY --from=silverblue /tmp/environment ${ENV_FILE}
 RUN source $ENV_FILE && dnf -y --setopt=install_weak_deps=False install \
     "kernel-core-$KERNEL_VERSION" \
     "kernel-devel-$KERNEL_VERSION"
@@ -30,7 +31,7 @@ COPY ./packages $PACKAGES_DIR
 
 RUN source $ENV_FILE && build-akmods $KERNEL_VERSION $KMODS_RPM_DIR
 
-FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION}
+FROM silverblue
 
 ENV BUILD_DIR=/build
 ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
@@ -71,4 +72,8 @@ COPY ./packages/utilities.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages utilities.yml
 
-RUN rm -rf $BUILD_DIR
+RUN source $SCRIPTS_DIR/deps/bash-color.sh && \
+    rm -rf $BUILD_DIR && \
+    echo_color "Commiting changes to container" && \
+    ostree container commit && \
+    echo_success "Successfully built image"

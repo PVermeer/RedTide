@@ -20,6 +20,11 @@ ENV ENV_FILE=${BUILD_DIR}/environment
 ENV PATH=${PATH}:${BUILD_DIR}/scripts
 
 COPY --from=silverblue /tmp/environment ${ENV_FILE}
+COPY --from=silverblue /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo \
+    /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo
+COPY --from=silverblue /usr/share/distribution-gpg-keys/rpmfusion \
+    /usr/share/distribution-gpg-keys/rpmfusion
+
 RUN source $ENV_FILE && dnf -y --setopt=install_weak_deps=False install \
     "kernel-core-$KERNEL_VERSION" \
     "kernel-devel-$KERNEL_VERSION"
@@ -47,6 +52,10 @@ COPY ./repos $REPOS_DIR
 
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
+
+COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages nvidia.yml
 
 COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \

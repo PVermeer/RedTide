@@ -1,0 +1,9 @@
+- repo: rpmfusion-nonfree-nvidia-driver
+  repo_file: rpmfusion-nonfree-nvidia-driver.repo
+  disable_repo: false
+  install:
+    - xorg-x11-drv-nvidia
+    - xorg-x11-drv-nvidia-cuda
+  kmods:
+    - akmod: nvidia
+      package: akmod-nvidia

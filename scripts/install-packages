@@ -22,12 +22,44 @@ for repo_packages in "${repos[@]}"; do
 	# repo is a single json snippet
 	repo=$(yq '.repo' <<<"$repo_packages")
 	repo_file=$(yq '.repo_file' <<<"$repo_packages")
+	disable_repo=$(yq '.disable_repo' <<<"$repo_packages")
 	pre_install_command=$(yq '.pre_install_command' <<<"$repo_packages")
 	post_install_command=$(yq '.post_install_command' <<<"$repo_packages")
 	mapfile -t packages_install < <(yq '.install[]' <<<"$repo_packages" | envsubst)
 	mapfile -t packages_remove < <(yq '.remove[]' <<<"$repo_packages" | envsubst)
 	mapfile -t packages_extensions < <(yq '.extensions[]' <<<"$repo_packages" | envsubst)
 	mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
+
+	# Kmods
+	if [ -n "${kmod_names[*]}" ]; then
+		echo_color "Installing kmods from '$repo'"
+
+		for name in "${kmod_names[@]}"; do
+			for rpm_package in "${KMODS_RPM_DIR}"/"${name}"/*.rpm; do
+				kmod_packages_paths+=("$rpm_package")
+			done
+		done
+
+		if [ -z "${kmod_packages_paths[*]}" ]; then
+			echo_error "Failed to get kmod packages in ${KMODS_RPM_DIR}/${name}/"
+			exit 1
+		fi
+
+		if [ "$repo" = "fedora" ]; then
+			rpm-ostree install "${kmod_packages_paths[@]}"
+
+		elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
+			enable_repo "$repo_file" "$repo"
+			rpm-ostree install "${kmod_packages_paths[@]}"
+			[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
+
+		else
+			enable_repo_extern "$repo_file" "$repo"
+			rpm-ostree install "${kmod_packages_paths[@]}"
+			[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
+		fi
+
+	fi
 
 	# Extensions
 	if [ -n "${packages_extensions[*]}" ]; then
@@ -64,12 +96,12 @@ for repo_packages in "${repos[@]}"; do
 			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
 				enable_repo "$repo_file" "$repo"
 				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-				disable_repo "$repo_file" "$repo"
+				[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
 
 			else
 				enable_repo_extern "$repo_file" "$repo"
 				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-				disable_repo_extern "$repo_file" "$repo"
+				[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
 			fi
 		fi
 	else
@@ -89,45 +121,14 @@ for repo_packages in "${repos[@]}"; do
 			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
 				enable_repo "$repo_file" "$repo"
 				rpm-ostree install "${packages_install[@]}"
-				disable_repo "$repo_file" "$repo"
+				[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
 
 			else
 				enable_repo_extern "$repo_file" "$repo"
 				rpm-ostree install "${packages_install[@]}"
-				disable_repo_extern "$repo_file" "$repo"
+				[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
 			fi
 		fi
-	fi
-
-	#Kmods
-	if [ -n "${kmod_names[*]}" ]; then
-		echo_color "Installing kmods from '$repo'"
-
-		for name in "${kmod_names[@]}"; do
-			for rpm_package in "${KMODS_RPM_DIR}"/"${name}"/*.rpm; do
-				kmod_packages_paths+=("$rpm_package")
-			done
-		done
-
-		if [ -z "${kmod_packages_paths[*]}" ]; then
-			echo_error "Failed to get kmod packages in ${KMODS_RPM_DIR}/${name}/"
-			exit 1
-		fi
-
-		if [ "$repo" = "fedora" ]; then
-			rpm-ostree install "${kmod_packages_paths[@]}"
-
-		elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-			enable_repo "$repo_file" "$repo"
-			rpm-ostree install "${kmod_packages_paths[@]}"
-			disable_repo "$repo_file" "$repo"
-
-		else
-			enable_repo_extern "$repo_file" "$repo"
-			rpm-ostree install "${kmod_packages_paths[@]}"
-			disable_repo_extern "$repo_file" "$repo"
-		fi
-
 	fi
 
 	# Extension config

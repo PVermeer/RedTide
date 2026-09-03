@@ -73,9 +73,9 @@ COPY ./packages/gaming.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages gaming.yml
 
-COPY ./packages/gnome-extensions.yml ${PACKAGES_DIR}/
+COPY ./packages/gnome.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
-    install-packages gnome-extensions.yml
+    install-packages gnome.yml
 
 COPY ./packages/utilities.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \

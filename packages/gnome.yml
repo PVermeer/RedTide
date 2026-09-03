@@ -1,4 +1,12 @@
 - repo: fedora
+  install:
+    - gnome-tweaks
+    - adw-gtk3-theme
+  dconf:
+    - schema: org/gnome/desktop/interface
+      keys:
+        - key: gtk-theme
+          value: adw-gtk3
   extensions:
     - id: appindicatorsupport@rgcjonas.gmail.com
       package: gnome-shell-extension-appindicator
@@ -7,6 +15,13 @@
     - id: caffeine@patapon.info
       package: gnome-shell-extension-caffeine
       enable: true
+      dconf:
+        - schema: org/gnome/shell/extensions/caffeine
+          keys:
+            - key: enable-mpris
+              value: true
+            - key: show-notifications
+              value: false
 
     - id: blur-my-shell@aunetx
       package: gnome-shell-extension-blur-my-shell

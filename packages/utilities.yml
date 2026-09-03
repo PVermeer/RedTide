@@ -2,4 +2,3 @@
   install:
     - gnome-boxes
     - grsync
-    - nextcloud-client-nautilus

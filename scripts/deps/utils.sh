@@ -80,3 +80,73 @@ disable_repo_extern() {
 
     rm "$repo_file_destination"
 }
+
+set_dconf() {
+    local -n dconf_values=$1
+    local dconf_dir="/etc/dconf/db/local.d"
+    local dconf_file="$dconf_dir/00-redtide"
+
+    if [ "${dconf_values[*]}" = "null" ]; then
+        echo_error "Setting dconf failed with 'null' input value"
+        return 1
+    fi
+
+    echo_color "Setting dconf overrides"
+
+    mkdir -p "$dconf_dir"
+    touch "$dconf_file"
+
+    for dconf in "${dconf_values[@]}"; do
+        local schema keys key_name key_value
+
+        schema=$(yq '.schema' <<<"$dconf")
+        mapfile -t keys < <(yq -r '.keys[]' <<<"$dconf")
+
+        for key in "${keys[@]}"; do
+            key_name=$(yq '.key' <<<"$key")
+            key_value=$(yq -o=json '.value' <<<"$key" | jq -c .)
+
+            crudini --set "$dconf_file" "$schema" "$key_name" "$key_value"
+        done
+    done
+
+    cat $dconf_file
+}
+
+enable_gnome_extensions() {
+    local -n extensions=$1
+
+    if [ -n "${extensions[*]}" ]; then
+        echo_color "Enabling extensions"
+
+        enabled_extension_ids=()
+        for extension in "${extensions[@]}"; do
+            local id should_enable
+
+            id=$(echo "$extension" | yq '.id' -)
+            should_enable=$(echo "$extension" | yq '.enable' -)
+            if [ "$should_enable" = "true" ]; then
+                enabled_extension_ids+=("$id")
+            fi
+        done
+
+        # Format to json array ["abc", "def"]
+        printf -v extensions_dconf_value "'%s'," "${enabled_extension_ids[@]}"
+        extensions_dconf_value="[${extensions_dconf_value%,}]"
+
+        # To dconf json inside a bash array for set_dconf argument
+        export extensions_dconf_json=("$(
+            extensions_dconf_value="$extensions_dconf_value" envsubst <<'EOF'
+{
+    "schema": "org/gnome/shell",
+    "keys": [{
+        "key": "enabled-extensions",
+        "value": $extensions_dconf_value
+    }]
+}
+EOF
+        )")
+
+        set_dconf extensions_dconf_json
+    fi
+}

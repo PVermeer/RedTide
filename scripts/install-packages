@@ -4,11 +4,9 @@ set -e
 set -o pipefail
 
 yml_file=$1
+package_config="${PACKAGES_DIR}/${yml_file}"
 
 source "${SCRIPTS_DIR}/deps/utils.sh"
-source "${SCRIPTS_DIR}/deps/gnome-extensions.sh"
-
-package_config="${PACKAGES_DIR}/${yml_file}"
 
 if [ ! -f "$package_config" ]; then
 	echo_error "Config file not found: $package_config"
@@ -29,6 +27,7 @@ for repo_packages in "${repos[@]}"; do
 	mapfile -t packages_remove < <(yq '.remove[]' <<<"$repo_packages" | envsubst)
 	mapfile -t packages_extensions < <(yq '.extensions[]' <<<"$repo_packages" | envsubst)
 	mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
+	mapfile -t dconf_configs < <(yq -r '.dconf[]' <<<"$repo_packages")
 
 	# Kmods
 	if [ -n "${kmod_names[*]}" ]; then
@@ -67,14 +66,20 @@ for repo_packages in "${repos[@]}"; do
 
 		for extension in "${packages_extensions[@]}"; do
 			packages_install+=("$(yq '.package' <<<"$extension")")
+			mapfile -t extension_dconfs < <(yq -r '.dconf[]' <<<"$extension")
+
+			for extension_dconf in "${extension_dconfs[@]}"; do
+				dconf_configs+=("$extension_dconf")
+			done
 		done
 	fi
 
 	## Packages
 	if [ -z "${packages_install[*]}" ] &&
 		[ -z "${packages_remove[*]}" ] &&
-		[ -z "${kmod_names[*]}" ]; then
-		echo_error "No packages defined for '$repo'"
+		[ -z "${kmod_names[*]}" ] &&
+		[ -z "${dconf[*]}" ]; then
+		echo_error "No packages / config defined for '$repo'"
 		exit 1
 	fi
 
@@ -132,7 +137,15 @@ for repo_packages in "${repos[@]}"; do
 	fi
 
 	# Extension config
-	if [ -n "${packages_extensions[*]}" ]; then enable_extensions packages_extensions; fi
+	if [ -n "${packages_extensions[*]}" ]; then
+		enable_gnome_extensions packages_extensions
+	fi
+
+	# Dconf
+	if [ -n "${dconf_configs[*]}" ]; then
+		set_dconf dconf_configs
+		dconf update
+	fi
 
 	# Post install
 	if [ ! "$post_install_command" = "null" ]; then

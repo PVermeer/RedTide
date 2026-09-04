@@ -49,12 +49,13 @@ See [packages](packages) for the full package install list.
 
 ### Gaming
 
-| Package         | Description                                                                                    | Source                                                                   |
-| --------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| akmod-xonedo    | Kernel module for newer Xbox controllers with wireless adapter support                         | [terra](https://terrapkg.com/)                                           |
-| akmod-xpadneo   | Kernel module for older Xbox controllers with bluetooth support                                | [terra](https://terrapkg.com/)                                           |
-| sunshine        | Self-hosted game stream host for Moonlight                                                     | [copr](https://copr.fedorainfracloud.org/coprs/pvermeer/sunshine)        |
-| virtual-display | A daemon and cli to temporary enable/disable a virtual display via the kernel debug sys paths. | [copr](https://copr.fedorainfracloud.org/coprs/pvermeer/virtual-display) |
+| Package                 | Description                                                            | Source                                                                   |
+| ----------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| gamescope-session-steam | Adds a gamescope session to the login                                  | [terra](https://terrapkg.com/)                                           |
+| akmod-xonedo            | Kernel module for newer Xbox controllers with wireless adapter support | [terra](https://terrapkg.com/)                                           |
+| akmod-xpadneo           | Kernel module for older Xbox controllers with bluetooth support        | [terra](https://terrapkg.com/)                                           |
+| sunshine                | Self-hosted game stream host for Moonlight                             | [copr](https://copr.fedorainfracloud.org/coprs/pvermeer/sunshine)        |
+| virtual-display         | A daemon and cli to enable/disable a (kernel) virtual display          | [copr](https://copr.fedorainfracloud.org/coprs/pvermeer/virtual-display) |
 
 ### Software development
 

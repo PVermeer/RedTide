@@ -2,3 +2,4 @@
   install:
     - gnome-boxes
     - grsync
+    - tailscale

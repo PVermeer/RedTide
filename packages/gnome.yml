@@ -7,6 +7,14 @@
       keys:
         - key: gtk-theme
           value: adw-gtk3
+        - key: gtk-enable-primary-paste
+          value: true
+
+    - schema: org/gnome/desktop/wm/preferences
+      keys:
+        - key: button-layout
+          value: appmenu:minimize,maximize,close
+
   extensions:
     - id: appindicatorsupport@rgcjonas.gmail.com
       package: gnome-shell-extension-appindicator

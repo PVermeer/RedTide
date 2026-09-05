@@ -82,7 +82,7 @@ COPY ./packages/utilities.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages utilities.yml
 
-RUN source $SCRIPTS_DIR/deps/bash-color.sh && \
+RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \
     echo_color "Commiting changes to container" && \
     ostree container commit && \

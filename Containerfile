@@ -29,8 +29,9 @@ RUN source $ENV_FILE && dnf -y --setopt=install_weak_deps=False install \
     "kernel-core-$KERNEL_VERSION" \
     "kernel-devel-$KERNEL_VERSION"
 
-COPY ./scripts/deps $SCRIPTS_DIR/deps
-COPY ./scripts/build-akmods $SCRIPTS_DIR/
+COPY ./scripts/deps/common $SCRIPTS_DIR/deps/common
+COPY ./scripts/deps/repo.sh $SCRIPTS_DIR/deps/repo.sh
+COPY ./scripts/build-akmods $SCRIPTS_DIR/build-akmods
 COPY ./repos $REPOS_DIR
 COPY ./packages $PACKAGES_DIR
 

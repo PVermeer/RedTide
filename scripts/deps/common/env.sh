@@ -2,9 +2,8 @@
 set -e
 set -o pipefail
 
-script_dir=$(dirname "${BASH_SOURCE[0]}")
-source "${script_dir}/bash-color.sh"
-source "${script_dir}/deps.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/bash-color.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/deps.sh"
 
 if [ -z "$BUILD_DIR" ]; then
 	echo_error "BUILD_DIR not defined in Containerfile"

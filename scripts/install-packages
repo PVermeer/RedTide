@@ -6,7 +6,9 @@ set -o pipefail
 yml_file=$1
 package_config="${PACKAGES_DIR}/${yml_file}"
 
-source "${SCRIPTS_DIR}/deps/utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/deps/repo.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/deps/gnome-extensions.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/deps/dconf.sh"
 
 if [ ! -f "$package_config" ]; then
 	echo_error "Config file not found: $package_config"
@@ -27,7 +29,7 @@ for repo_packages in "${repos[@]}"; do
 	mapfile -t packages_remove < <(yq '.remove[]' <<<"$repo_packages" | envsubst)
 	mapfile -t packages_extensions < <(yq '.extensions[]' <<<"$repo_packages" | envsubst)
 	mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
-	mapfile -t dconf_configs < <(yq -r '.dconf[]' <<<"$repo_packages")
+	mapfile -t dconf_configs < <(yq '.dconf[]' <<<"$repo_packages")
 
 	# Kmods
 	if [ -n "${kmod_names[*]}" ]; then

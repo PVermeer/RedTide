@@ -31,7 +31,7 @@ for repo_packages in "${repos[@]}"; do
 
 	# Kmods
 	if [ -n "${kmod_names[*]}" ]; then
-		echo_color "Installing kmods from '$repo'"
+		echo_color "Installing kmods for $yml_file: '$repo'"
 
 		for name in "${kmod_names[@]}"; do
 			for rpm_package in "${KMODS_RPM_DIR}"/"${name}"/*.rpm; do
@@ -62,7 +62,7 @@ for repo_packages in "${repos[@]}"; do
 
 	# Extensions
 	if [ -n "${packages_extensions[*]}" ]; then
-		echo_color "Installing extensions from '$repo'"
+		echo_color "Installing extensions for $yml_file: '$repo'"
 
 		for extension in "${packages_extensions[@]}"; do
 			packages_install+=("$(yq '.package' <<<"$extension")")
@@ -79,13 +79,13 @@ for repo_packages in "${repos[@]}"; do
 		[ -z "${packages_remove[*]}" ] &&
 		[ -z "${kmod_names[*]}" ] &&
 		[ -z "${dconf[*]}" ]; then
-		echo_error "No packages / config defined for '$repo'"
+		echo_error "No packages / config defined for $yml_file: '$repo'"
 		exit 1
 	fi
 
 	# Pre install
 	if [ ! "$pre_install_command" = "null" ]; then
-		echo_color "Running pre install command"
+		echo_color "Running pre install command for $yml_file: '$repo'"
 		echo "$pre_install_command"
 		eval "$pre_install_command"
 	fi
@@ -93,7 +93,7 @@ for repo_packages in "${repos[@]}"; do
 	# Packages - replace
 	if [ -n "${packages_remove[*]}" ] && [ -n "${packages_install[*]}" ]; then
 		if [ -n "${packages_install[*]}" ]; then
-			echo_color "Replacing packages from '$repo'"
+			echo_color "Replacing packages for $yml_file: '$repo'"
 
 			if [ "$repo" = "fedora" ]; then
 				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
@@ -112,13 +112,13 @@ for repo_packages in "${repos[@]}"; do
 	else
 		# Packages - remove
 		if [ -n "${packages_remove[*]}" ]; then
-			echo_color "Removing packages for '$repo'"
+			echo_color "Removing packages for $yml_file: '$repo'"
 			rpm-ostree override remove "${packages_remove[@]}"
 		fi
 
 		# Packages - install
 		if [ -n "${packages_install[*]}" ]; then
-			echo_color "Installing packages from '$repo'"
+			echo_color "Installing packages for $yml_file: '$repo'"
 
 			if [ "$repo" = "fedora" ]; then
 				rpm-ostree install "${packages_install[@]}"
@@ -149,7 +149,7 @@ for repo_packages in "${repos[@]}"; do
 
 	# Post install
 	if [ ! "$post_install_command" = "null" ]; then
-		echo_color "Running post install command"
+		echo_color "Running post install command for $yml_file: '$repo'"
 		echo "$post_install_command"
 		eval "$post_install_command"
 	fi

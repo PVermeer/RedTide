@@ -10,7 +10,7 @@ script_dir=$(dirname "${BASH_SOURCE[0]}")
 source "${script_dir}/deps/utils.sh"
 
 for package_config in "$PACKAGES_DIR"/*.yml; do
-    echo_color "Checking for kmod packages for $package_config"
+    echo_color "Checking for kmod packages in $package_config"
 
     mapfile -t repos < <(yq -o=json -I=0 '.[]' "$package_config")
 
@@ -40,7 +40,7 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
         fi
 
         for name in "${kmod_names[@]}"; do
-            echo_color "Building kmod package for '$name'"
+            echo_color "Building kmod package $package_config: '$name'"
 
             akmods --force --kernel "$kernel_version" --kmod "$name"
 
@@ -56,7 +56,7 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
             mv /var/cache/akmods/*/*.rpm "${destination}/${name}/"
             ls "${destination}/${name}/"
 
-            echo_success "Successfully built kmod: $name"
+            echo_success "Successfully built kmod for $package_config: '$name'"
         done
     done
 

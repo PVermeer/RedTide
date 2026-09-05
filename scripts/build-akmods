@@ -18,6 +18,7 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
         # repo_packages is a single JSON snippet
         repo=$(yq '.repo' <<<"$repo_packages")
         repo_file=$(yq '.repo_file' <<<"$repo_packages")
+        disable_repo=$(yq '.disable_repo' <<<"$repo_packages")
         mapfile -t kmod_packages < <(yq -r '.kmods[].package' <<<"$repo_packages")
         mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
 
@@ -30,12 +31,12 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
             elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
                 enable_repo "$repo_file" "$repo"
                 dnf -y install "${kmod_packages[@]}"
-                disable_repo "$repo_file" "$repo"
+                [ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
 
             else
                 enable_repo_extern "$repo_file" "$repo"
                 dnf -y install "${kmod_packages[@]}"
-                disable_repo_extern "$repo_file" "$repo"
+                [ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
             fi
         fi
 

@@ -82,6 +82,10 @@ COPY ./packages/utilities.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages utilities.yml
 
+COPY ./packages/vm.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages vm.yml
+
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \
     echo_color "Commiting changes to container" && \

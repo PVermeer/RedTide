@@ -29,3 +29,8 @@
   repo_file: pvermeer-virtual-display.repo
   install:
     - virtual-display
+
+- repo: copr:copr.fedorainfracloud.org:pvermeer:steam-steamos
+  repo_file: pvermeer-steam-steamos.repo
+  install:
+    - steam-steamos

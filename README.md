@@ -12,9 +12,17 @@ An unopiniated custom Fedora Silverblue image focussed on gaming and software de
 
 1. Download the Silverblue iso: https://fedoraproject.org/atomic-desktops/silverblue.
 2. Install Silverblue.
-3. Rebase to Redtide.
+3. Rebase to Redtide with the [rebase.sh](rebase.sh) script. The script configures the security keys for RedTide and rebases to it.
+
    ```sh
-   rpm-ostree rebase ostree-unverified-registry:ghcr.io/pvermeer/redtide:stable
+   # Download script
+   wget https://raw.githubusercontent.com/pvermeer/redtide/main/rebase.sh
+
+   # Set executable
+   chmod +x rebase.sh
+
+   # Run as root
+   sudo ./rebase.sh
    ```
 
 # Image variants

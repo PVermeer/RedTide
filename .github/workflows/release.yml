@@ -15,15 +15,15 @@ jobs:
       IMAGE: ghcr.io/pvermeer/redtide
 
     steps:
-      - name: Prep
-        run: |
-          echo "BUILD_DATE=$(date +%Y%m%d)" >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=release-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
-
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set release variables
+        run: |
+          echo "BUILD_DATE=$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=release-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
 
       - name: Log in to GHCR
         run: |
@@ -33,26 +33,25 @@ jobs:
         run: |
           podman build -f ./Containerfile \
             -t "${IMAGE}:${RELEASE_TAG}" \
-            -t "${IMAGE}:${BUILD_DATE}" \
-            -t "${IMAGE}:latest" \
             .
 
-      - name: Push unsigned release image
+      - name: Push release image
         run: |
-          podman push --format=oci "${IMAGE}:${RELEASE_TAG}"
+          podman push \
+            --format=oci \
+            --digestfile "${RUNNER_TEMP}/digest" \
+            "${IMAGE}:${RELEASE_TAG}"
+
+          DIGEST="$(cat "${RUNNER_TEMP}/digest")"
+          echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
+          echo "Published digest: ${DIGEST}"
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@v3.9.2
 
       - name: Log in to GHCR with Cosign
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Get image digest
-        run: |
-          DIGEST="$(podman inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:${RELEASE_TAG}" | cut -d@ -f2)"
-          echo "DIGEST=$DIGEST" >> "$GITHUB_ENV"
-          echo "Image digest: $DIGEST"
 
       - name: Sign image
         env:
@@ -62,14 +61,25 @@ jobs:
 
       - name: Verify signature
         run: |
-          cosign verify --key ./keys/cosign-redtide-primary.pub "${IMAGE}@${DIGEST}"
+          if cosign verify --new-bundle-format=false --key keys/cosign-redtide-primary.pub "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
+            echo "Signature verified with primary key."
+            exit 0
+          fi
+          if cosign verify --new-bundle-format=false --key keys/cosign-redtide-secondary.pub "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
+            echo "Signature verified with secondary key."
+            exit 0
+          fi
+          echo "ERROR: Image signature could not be verified with either RedTide key."
+          exit 1
 
       - name: Publish latest tag
         run: |
+          podman tag "${IMAGE}:${RELEASE_TAG}" "${IMAGE}:latest"
           podman push --format=oci "${IMAGE}:latest"
 
       - name: Publish date tag
         run: |
+          podman tag "${IMAGE}:${RELEASE_TAG}" "${IMAGE}:${BUILD_DATE}"
           podman push --format=oci "${IMAGE}:${BUILD_DATE}"
 
       - name: Cleanup

@@ -7,13 +7,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/dconf.sh"
 
 enable_gnome_extensions() {
     local -n extensions=$1
+    local id should_enable extension
+    local enabled_extension_ids
+    local extensions_dconf_value
+    local extensions_dconf_json
 
     if [ -n "${extensions[*]}" ]; then
         echo_color "Enabling extensions"
 
         enabled_extension_ids=()
         for extension in "${extensions[@]}"; do
-            local id should_enable
 
             id=$(echo "$extension" | yq '.id' -)
             should_enable=$(echo "$extension" | yq '.enable' -)
@@ -27,7 +30,8 @@ enable_gnome_extensions() {
         extensions_dconf_value="[${extensions_dconf_value%,}]"
 
         # To dconf json inside a bash array for set_dconf argument
-        export extensions_dconf_json=("$(
+        # shellcheck disable=SC2034
+        extensions_dconf_json=("$(
             extensions_dconf_value="$extensions_dconf_value" envsubst <<'EOF'
 {
     "schema": "org/gnome/shell",

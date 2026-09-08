@@ -71,6 +71,7 @@ enable_repo_extern() {
 disable_repo_extern() {
     local repo_file_name=$1
     local repo_name=$2
+    local repo_key
 
     repo_key="${repo_file_name##*/}"
     repo_key="RPM-GPG-KEY-${repo_key%.repo}"

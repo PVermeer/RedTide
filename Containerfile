@@ -49,7 +49,7 @@ ENV REPO_KEYS_DIR=${BUILD_DIR}/keys
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV PATH=${PATH}:${BUILD_DIR}/scripts
 
-COPY --from=akmods $KMODS_RPM_DIR $KMODS_RPM_DIR
+# COPY --from=akmods $KMODS_RPM_DIR $KMODS_RPM_DIR
 COPY ./scripts/deps $SCRIPTS_DIR/deps
 COPY ./scripts/install-packages $SCRIPTS_DIR/install-packages
 COPY ./repos $REPOS_DIR
@@ -58,37 +58,37 @@ COPY ./keys $REPO_KEYS_DIR
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
 
-COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages nvidia.yml
+# COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages nvidia.yml
 
-COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages multimedia.yml
+# COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages multimedia.yml
 
-COPY ./packages/containers.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages containers.yml
+# COPY ./packages/containers.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages containers.yml
 
-COPY ./packages/development.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages development.yml
+# COPY ./packages/development.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages development.yml
 
-COPY ./packages/gaming.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages gaming.yml
+# COPY ./packages/gaming.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages gaming.yml
 
-COPY ./packages/gnome.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages gnome.yml
+# COPY ./packages/gnome.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages gnome.yml
 
-COPY ./packages/utilities.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages utilities.yml
+# COPY ./packages/utilities.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages utilities.yml
 
-COPY ./packages/vm.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages vm.yml
+# COPY ./packages/vm.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages vm.yml
 
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \

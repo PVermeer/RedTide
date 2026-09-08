@@ -11,12 +11,13 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      IMAGE: ghcr.io/pvermeer/redtide
 
     steps:
       - name: Prep
         run: |
           echo "BUILD_DATE=$(date +%Y%m%d)" >> "$GITHUB_ENV"
-          echo "IMAGE=ghcr.io/pvermeer/redtide" >> "$GITHUB_ENV"
 
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -27,11 +28,42 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Build
+      - name: Build image
         run: |
           podman build -f ./Containerfile -t "${IMAGE}:latest" -t "${IMAGE}:${BUILD_DATE}" .
 
-      - name: Push
+      - name: Push image
         run: |
           podman push --format=oci "${IMAGE}:latest"
           podman push --format=oci "${IMAGE}:${BUILD_DATE}"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Log in to GHCR with Cosign
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Sign image with primary key
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.PRIMARY_COSIGN_PRIVATE_KEY }}
+        run: |
+          DIGEST="$(podman inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:latest" | cut -d@ -f2)"
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE}@${DIGEST}"
+
+      - name: Sign image with secondary key
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.SECONDARY_COSIGN_PRIVATE_KEY }}
+        run: |
+          DIGEST="$(podman inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:latest" | cut -d@ -f2)"
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE}@${DIGEST}"
+
+      - name: Verify primary signature
+        run: |
+          DIGEST="$(podman inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:latest" | cut -d@ -f2)"
+          cosign verify --key ./keys/cosign-redtide-primary.pub "${IMAGE}@${DIGEST}"
+
+      - name: Verify secondary signature
+        run: |
+          DIGEST="$(podman inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:latest" | cut -d@ -f2)"
+          cosign verify --key ./keys/cosign-redtide-secondary.pub "${IMAGE}@${DIGEST}"

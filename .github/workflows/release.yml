@@ -54,25 +54,15 @@ jobs:
           echo "DIGEST=$DIGEST" >> "$GITHUB_ENV"
           echo "Image digest: $DIGEST"
 
-      - name: Sign image with primary key
+      - name: Sign image
         env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.PRIMARY_COSIGN_PRIVATE_KEY }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         run: |
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE}@${DIGEST}"
 
-      - name: Sign image with secondary key
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.SECONDARY_COSIGN_PRIVATE_KEY }}
-        run: |
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE}@${DIGEST}"
-
-      - name: Verify primary signature
+      - name: Verify signature
         run: |
           cosign verify --key ./keys/cosign-redtide-primary.pub "${IMAGE}@${DIGEST}"
-
-      - name: Verify secondary signature
-        run: |
-          cosign verify --key ./keys/cosign-redtide-secondary.pub "${IMAGE}@${DIGEST}"
 
       - name: Publish latest tag
         run: |
@@ -86,4 +76,3 @@ jobs:
         if: always()
         run: |
           podman logout ghcr.io
-          

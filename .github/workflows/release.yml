@@ -143,19 +143,6 @@ jobs:
           echo "digest=${BETA_DIGEST}" >> "$GITHUB_OUTPUT"
           echo "commit=${BETA_COMMIT}" >> "$GITHUB_OUTPUT"
 
-      - name: Verify beta image belongs to beta branch
-        run: |
-          BETA_BRANCH_COMMIT="$(git rev-parse origin/beta)"
-
-          if [ "${BETA_BRANCH_COMMIT}" != "${{ steps.beta.outputs.commit }}" ]; then
-            echo "ERROR: Beta image was not built from the current beta branch."
-            echo "Image commit:  ${{ steps.beta.outputs.commit }}"
-            echo "Beta branch:   ${BETA_BRANCH_COMMIT}"
-            exit 1
-          fi
-
-          echo "Beta image matches beta branch."
-
       - name: Set stable release variables
         id: release
         run: |

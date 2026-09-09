@@ -37,7 +37,7 @@ jobs:
 
       - name: Set release variables
         run: |
-          BUILD_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          BUILD_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           COMMIT="$(git rev-parse HEAD)"
           RELEASE_TAG="${CHANNEL}-${BUILD_TIMESTAMP}"
 

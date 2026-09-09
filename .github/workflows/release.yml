@@ -146,7 +146,7 @@ jobs:
       - name: Set stable release variables
         id: release
         run: |
-          RELEASE_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          RELEASE_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           RELEASE_TAG="stable-${RELEASE_TIMESTAMP}"
 
           echo "RELEASE_TIMESTAMP=${RELEASE_TIMESTAMP}" >> "$GITHUB_ENV"
@@ -167,7 +167,7 @@ jobs:
             "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
             "docker://${IMAGE}:stable"
 
-      - name: Publish immutable stable image tag
+      - name: Publish stable image tag
         run: |
           skopeo copy \
             "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \

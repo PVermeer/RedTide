@@ -40,6 +40,12 @@
             }
         },
         {
+            "label": "Run silverblue interactive",
+            "type": "shell",
+            "command": "podman run --rm -it quay.io/fedora/fedora-silverblue:latest bash",
+            "problemMatcher": []
+        },
+        {
             "label": "Podman clean",
             "type": "shell",
             "command": "podman system prune -af --volumes && podman image prune -af --build-cache --external",

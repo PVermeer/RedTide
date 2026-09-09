@@ -167,6 +167,10 @@ jobs:
             "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
             "docker://${IMAGE}:stable"
 
+          skopeo copy \
+            "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
+            "docker://${IMAGE}:latest"
+
       - name: Publish stable image tag
         run: |
           skopeo copy \

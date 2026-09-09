@@ -1,3 +1,9 @@
+- repo: rpmfusion-nonfree-steam
+  repo_file: rpmfusion-nonfree-steam.repo
+  install:
+    - steam
+    - steam-devices
+
 - repo: fedora
   install:
     - gamescope
@@ -13,12 +19,6 @@
       package: akmod-xonedo
     - akmod: xpadneo
       package: akmod-xpadneo
-
-- repo: rpmfusion-nonfree-steam
-  repo_file: rpmfusion-nonfree-steam.repo
-  install:
-    - steam
-    - steam-devices
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
   repo_file: pvermeer-sunshine.repo

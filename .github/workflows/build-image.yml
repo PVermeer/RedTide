@@ -131,6 +131,16 @@ jobs:
             --format=oci \
             "${IMAGE}:${CHANNEL}"
 
+          if [ "${CHANNEL}" = "stable" ]; then
+            podman tag \
+              "${IMAGE}:${RELEASE_TAG}" \
+              "${IMAGE}:latest"
+
+            podman push \
+              --format=oci \
+              "${IMAGE}:latest"
+          fi
+
       - name: Create Git release tag
         run: |
           git config user.name "github-actions[bot]"

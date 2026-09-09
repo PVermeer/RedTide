@@ -21,8 +21,8 @@ if [ -z "$REPOS_DIR" ]; then
 	echo_error "REPOS_DIR not defined in Containerfile"
 	exit 1
 fi
-if [ -z "$REPO_KEYS_DIR" ]; then
-	echo_error "REPO_KEYS_DIR not defined in Containerfile"
+if [ -z "$KEYS_DIR" ]; then
+	echo_error "KEYS_DIR not defined in Containerfile"
 	exit 1
 fi
 if [ -z "$KMODS_RPM_DIR" ]; then

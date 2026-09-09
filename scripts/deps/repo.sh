@@ -48,7 +48,7 @@ enable_repo_extern() {
     local repo_file_source="${REPOS_DIR}/${repo_file_name}"
     local repo_file_destination="/etc/yum.repos.d/${repo_file_name}"
 
-    local repo_key_file_source="${REPO_KEYS_DIR}/${repo_key}"
+    local repo_key_file_source="${KEYS_DIR}/${repo_key}"
     local repo_key_file_destination="/etc/pki/rpm-gpg/${repo_key}"
 
     echo_color "Installing external repo '$repo_name' in $repo_file_source"

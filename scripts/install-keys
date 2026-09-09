@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source "$(dirname "${BASH_SOURCE[0]}")/deps/common/env.sh"
+
+KEY_DIR="/etc/pki/containers"
+POLICY_DIR="/etc/containers"
+POLICY="${POLICY_DIR}/policy.json"
+REGISTRIES_DIR="${POLICY_DIR}/registries.d"
+REGISTRIES_CONFIG="${REGISTRIES_DIR}/redtide.yaml"
+
+SOURCE_KEY_DIR=$KEYS_DIR
+PRIMARY_SOURCE="${SOURCE_KEY_DIR}/cosign-redtide-primary.pub"
+SECONDARY_SOURCE="${SOURCE_KEY_DIR}/cosign-redtide-secondary.pub"
+
+PRIMARY_KEY="${KEY_DIR}/redtide-primary.pub"
+SECONDARY_KEY="${KEY_DIR}/redtide-secondary.pub"
+
+require_file() {
+    if [[ ! -f "$1" ]]; then
+        echo_error "Required file not found: $1"
+        exit 1
+    fi
+}
+
+echo_color "\n==== Installing signing keys ===="
+
+require_file "$PRIMARY_SOURCE"
+require_file "$SECONDARY_SOURCE"
+
+install -d -m 0755 "$KEY_DIR"
+install -d -m 0755 "$POLICY_DIR"
+install -d -m 0755 "$REGISTRIES_DIR"
+
+echo_color "Installing keys"
+
+install -m 0644 "$PRIMARY_SOURCE" "$PRIMARY_KEY"
+install -m 0644 "$SECONDARY_SOURCE" "$SECONDARY_KEY"
+
+restorecon -RF "$KEY_DIR" 2>/dev/null || true
+echo "$PRIMARY_KEY"
+echo "$SECONDARY_KEY"
+
+echo_color "Configuring registry"
+
+cat >"$REGISTRIES_CONFIG" <<'EOF'
+docker:
+  ghcr.io/pvermeer/redtide:
+    use-sigstore-attachments: true
+EOF
+
+chmod 0644 "$REGISTRIES_CONFIG"
+restorecon -v "$REGISTRIES_CONFIG" 2>/dev/null || true
+echo "${REGISTRIES_CONFIG}:"
+cat "$REGISTRIES_CONFIG"
+
+echo_color "Configuring container signature policy"
+
+if [[ ! -f "$POLICY" ]]; then
+    cat >"$POLICY" <<'EOF'
+{
+  "default": [
+    {
+      "type": "reject"
+    }
+  ],
+  "transports": {
+    "docker": {}
+  }
+}
+EOF
+fi
+
+tmp_policy="$(mktemp)"
+trap 'rm -f "$tmp_policy"' EXIT
+
+jq \
+    --arg primary "$PRIMARY_KEY" \
+    --arg secondary "$SECONDARY_KEY" \
+    '
+    .default = [
+        {
+            "type": "reject"
+        }
+    ]
+    |
+    .transports.docker["ghcr.io/pvermeer/redtide"] = [
+        {
+            "type": "sigstoreSigned",
+            "keyPaths": [
+                $primary,
+                $secondary
+            ],
+            "signedIdentity": {
+                "type": "matchRepository"
+            }
+        }
+    ]
+    ' \
+    "$POLICY" >"$tmp_policy"
+
+install -m 0644 "$tmp_policy" "$POLICY"
+restorecon -v "$POLICY" 2>/dev/null || true
+echo "${POLICY}:"
+cat "$POLICY"
+
+echo_color "Commiting changes to container"
+ostree container commit
+
+echo_success "Signing keys and policy installed successfully"

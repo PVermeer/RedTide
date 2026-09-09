@@ -1,0 +1,16 @@
+name: Build Testing
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Testing
+    permissions:
+      contents: write
+      packages: write
+    uses: ./.github/workflows/build-image.yml
+    with:
+      ref: main
+      channel: testing
+    secrets: inherit

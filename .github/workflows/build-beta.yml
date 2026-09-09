@@ -1,0 +1,16 @@
+name: Build Beta
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Beta
+    permissions:
+      contents: write
+      packages: write
+    uses: ./.github/workflows/build-image.yml
+    with:
+      ref: beta
+      channel: beta
+    secrets: inherit

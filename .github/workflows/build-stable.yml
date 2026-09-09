@@ -1,0 +1,16 @@
+name: Build Stable
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Stable
+    permissions:
+      contents: write
+      packages: write
+    uses: ./.github/workflows/build-image.yml
+    with:
+      ref: stable
+      channel: stable
+    secrets: inherit

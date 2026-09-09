@@ -1,88 +1,207 @@
 name: Release
 
 on:
+  schedule:
+    - cron: "0 8 * * 1" # Every Monday at 08:00 UTC. Only even weeks are release weeks.
   workflow_dispatch:
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  build:
-    name: Build and push image
+  check-biweekly:
+    name: Check Release Week
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - name: Check release schedule
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual run: proceeding."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          WEEK="$(date -u +%V)"
+
+          if (( 10#$WEEK % 2 == 0 )); then
+            echo "ISO week ${WEEK}: release week."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ISO week ${WEEK}: not a release week."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  merge-stable:
+    name: Merge Beta into Stable
+    needs: check-biweekly
+    if: needs.check-biweekly.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+    outputs:
+      beta_commit: ${{ steps.beta.outputs.commit }}
+
+    steps:
+      - name: Checkout stable
+        uses: actions/checkout@v4
+        with:
+          ref: stable
+          fetch-depth: 0
+
+      - name: Fetch branches
+        run: |
+          git fetch origin \
+            beta \
+            stable
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine beta commit
+        id: beta
+        run: |
+          BETA_COMMIT="$(git rev-parse origin/beta)"
+
+          echo "Beta commit: ${BETA_COMMIT}"
+
+          echo "commit=${BETA_COMMIT}" >> "$GITHUB_OUTPUT"
+
+      - name: Merge beta into stable
+        run: |
+          git checkout stable
+          git reset --hard origin/stable
+
+          git merge \
+            --no-ff \
+            origin/beta \
+            -m "Release beta as stable"
+
+          git push origin stable
+
+  promote-stable:
+    name: Promote Beta Image to Stable
+    needs: merge-stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
       packages: write
     env:
       IMAGE: ghcr.io/pvermeer/redtide
+
+    outputs:
+      stable_release_tag: ${{ steps.release.outputs.tag }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: stable
           fetch-depth: 0
 
-      - name: Set release variables
+      - name: Inspect current beta image
+        id: beta
         run: |
-          echo "BUILD_DATE=$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=release-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+          BETA_INFO="$(
+            skopeo inspect \
+              --format '{{json .}}' \
+              "docker://${IMAGE}:beta"
+          )"
 
-      - name: Log in to GHCR
+          BETA_DIGEST="$(echo "${BETA_INFO}" | jq -r '.Digest')"
+          BETA_CREATED="$(echo "${BETA_INFO}" | jq -r '.Created')"
+          BETA_COMMIT="$(
+            echo "${BETA_INFO}" |
+              jq -r '.Labels["org.opencontainers.image.revision"]'
+          )"
+
+          if [ -z "${BETA_DIGEST}" ] || [ "${BETA_DIGEST}" = "null" ]; then
+            echo "ERROR: Could not determine beta image digest."
+            exit 1
+          fi
+
+          if [ -z "${BETA_CREATED}" ] || [ "${BETA_CREATED}" = "null" ]; then
+            echo "ERROR: Could not determine beta image creation time."
+            exit 1
+          fi
+
+          if [ -z "${BETA_COMMIT}" ] || [ "${BETA_COMMIT}" = "null" ]; then
+            echo "ERROR: Beta image has no Git revision label."
+            exit 1
+          fi
+
+          echo "Beta digest:  ${BETA_DIGEST}"
+          echo "Beta created: ${BETA_CREATED}"
+          echo "Beta commit:  ${BETA_COMMIT}"
+
+          echo "digest=${BETA_DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "commit=${BETA_COMMIT}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify beta image belongs to beta branch
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          BETA_BRANCH_COMMIT="$(git rev-parse origin/beta)"
 
-      - name: Build image
+          if [ "${BETA_BRANCH_COMMIT}" != "${{ steps.beta.outputs.commit }}" ]; then
+            echo "ERROR: Beta image was not built from the current beta branch."
+            echo "Image commit:  ${{ steps.beta.outputs.commit }}"
+            echo "Beta branch:   ${BETA_BRANCH_COMMIT}"
+            exit 1
+          fi
+
+          echo "Beta image matches beta branch."
+
+      - name: Set stable release variables
+        id: release
         run: |
-          podman build -f ./Containerfile \
-            -t "${IMAGE}:${RELEASE_TAG}" \
-            .
+          RELEASE_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          RELEASE_TAG="stable-${RELEASE_TIMESTAMP}"
 
-      - name: Push release image
+          echo "RELEASE_TIMESTAMP=${RELEASE_TIMESTAMP}" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
+
+          echo "tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Promote beta to stable
         run: |
-          podman push \
-            --format=oci \
-            --digestfile "${RUNNER_TEMP}/digest" \
-            "${IMAGE}:${RELEASE_TAG}"
+          skopeo copy \
+            "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
+            "docker://${IMAGE}:stable"
 
-          DIGEST="$(cat "${RUNNER_TEMP}/digest")"
-          echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
-          echo "Published digest: ${DIGEST}"
+      - name: Publish immutable stable image tag
+        run: |
+          skopeo copy \
+            "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
+            "docker://${IMAGE}:${RELEASE_TAG}"
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.9.2
 
-      - name: Log in to GHCR with Cosign
+      - name: Create stable Git tag
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Sign image
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-        run: |
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${IMAGE}@${DIGEST}"
+          git tag \
+            "${RELEASE_TAG}" \
+            "${{ steps.beta.outputs.commit }}"
 
-      - name: Verify signature
-        run: |
-          if cosign verify --new-bundle-format=false --key keys/cosign-redtide-primary.pub "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
-            echo "Signature verified with primary key."
-            exit 0
-          fi
-          if cosign verify --new-bundle-format=false --key keys/cosign-redtide-secondary.pub "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
-            echo "Signature verified with secondary key."
-            exit 0
-          fi
-          echo "ERROR: Image signature could not be verified with either RedTide key."
-          exit 1
+          git push origin \
+            "${RELEASE_TAG}"
 
-      - name: Publish latest tag
-        run: |
-          podman tag "${IMAGE}:${RELEASE_TAG}" "${IMAGE}:latest"
-          podman push --format=oci "${IMAGE}:latest"
-
-      - name: Publish date tag
-        run: |
-          podman tag "${IMAGE}:${RELEASE_TAG}" "${IMAGE}:${BUILD_DATE}"
-          podman push --format=oci "${IMAGE}:${BUILD_DATE}"
-
-      - name: Cleanup
-        if: always()
-        run: |
-          podman logout ghcr.io
+  build-beta:
+    name: Build New Beta
+    needs: promote-stable
+    permissions:
+      contents: write
+      packages: write
+    uses: ./.github/workflows/build-image.yml
+    with:
+      ref: beta
+      channel: beta
+    secrets: inherit

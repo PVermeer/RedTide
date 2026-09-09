@@ -154,6 +154,13 @@ jobs:
 
           echo "tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
 
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" |
+            skopeo login ghcr.io \
+              --username "${{ github.actor }}" \
+              --password-stdin
+
       - name: Promote beta to stable
         run: |
           skopeo copy \
@@ -165,9 +172,6 @@ jobs:
           skopeo copy \
             "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
             "docker://${IMAGE}:${RELEASE_TAG}"
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.9.2
 
       - name: Create stable Git tag
         run: |

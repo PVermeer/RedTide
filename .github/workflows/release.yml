@@ -9,12 +9,20 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+env:
+  IMAGE: ghcr.io/pvermeer/redtide
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
 jobs:
   check-biweekly:
     name: Check Release Week
     runs-on: ubuntu-latest
     outputs:
       should_release: ${{ steps.check.outputs.should_release }}
+
     steps:
       - name: Check release schedule
         id: check
@@ -36,13 +44,16 @@ jobs:
           fi
 
   merge-stable:
-    name: Merge Beta into Stable
+    name: Merge Beta Image Commit into Stable
     needs: check-biweekly
     if: needs.check-biweekly.outputs.should_release == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
+      packages: read
     outputs:
+      beta_digest: ${{ steps.beta.outputs.digest }}
       beta_commit: ${{ steps.beta.outputs.commit }}
 
     steps:
@@ -52,60 +63,7 @@ jobs:
           ref: stable
           fetch-depth: 0
 
-      - name: Fetch branches
-        run: |
-          git fetch origin \
-            beta \
-            stable
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Determine beta commit
-        id: beta
-        run: |
-          BETA_COMMIT="$(git rev-parse origin/beta)"
-
-          echo "Beta commit: ${BETA_COMMIT}"
-
-          echo "commit=${BETA_COMMIT}" >> "$GITHUB_OUTPUT"
-
-      - name: Merge beta into stable
-        run: |
-          git checkout stable
-          git reset --hard origin/stable
-
-          git merge \
-            --no-ff \
-            origin/beta \
-            -m "Release beta as stable"
-
-          git push origin stable
-
-  promote-stable:
-    name: Promote Beta Image to Stable
-    needs: merge-stable
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-      packages: write
-    env:
-      IMAGE: ghcr.io/pvermeer/redtide
-
-    outputs:
-      stable_release_tag: ${{ steps.release.outputs.tag }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: stable
-          fetch-depth: 0
-
-      - name: Inspect current beta image
+      - name: Inspect beta image
         id: beta
         run: |
           BETA_INFO="$(
@@ -115,7 +73,6 @@ jobs:
           )"
 
           BETA_DIGEST="$(echo "${BETA_INFO}" | jq -r '.Digest')"
-          BETA_CREATED="$(echo "${BETA_INFO}" | jq -r '.Created')"
           BETA_COMMIT="$(
             echo "${BETA_INFO}" |
               jq -r '.Labels["org.opencontainers.image.revision"]'
@@ -126,33 +83,45 @@ jobs:
             exit 1
           fi
 
-          if [ -z "${BETA_CREATED}" ] || [ "${BETA_CREATED}" = "null" ]; then
-            echo "ERROR: Could not determine beta image creation time."
-            exit 1
-          fi
-
           if [ -z "${BETA_COMMIT}" ] || [ "${BETA_COMMIT}" = "null" ]; then
             echo "ERROR: Beta image has no Git revision label."
             exit 1
           fi
 
-          echo "Beta digest:  ${BETA_DIGEST}"
-          echo "Beta created: ${BETA_CREATED}"
-          echo "Beta commit:  ${BETA_COMMIT}"
+          echo "Beta digest: ${BETA_DIGEST}"
+          echo "Beta commit: ${BETA_COMMIT}"
 
           echo "digest=${BETA_DIGEST}" >> "$GITHUB_OUTPUT"
           echo "commit=${BETA_COMMIT}" >> "$GITHUB_OUTPUT"
 
-      - name: Set stable release variables
-        id: release
+      - name: Merge beta image commit into stable
         run: |
-          RELEASE_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-          RELEASE_TAG="stable-${RELEASE_TIMESTAMP}"
+          git merge \
+            --no-ff \
+            "${{ steps.beta.outputs.commit }}" \
+            -m "Release beta as stable"
 
-          echo "RELEASE_TIMESTAMP=${RELEASE_TIMESTAMP}" >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
+          git push origin stable
 
-          echo "tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+  promote-stable:
+    name: Promote Beta Image to Stable
+    needs: merge-stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout stable
+        uses: actions/checkout@v4
+        with:
+          ref: stable
+          fetch-depth: 0
+
+      - name: Set stable release tag
+        run: |
+          echo "RELEASE_TAG=stable-$(date -u +%Y%m%dT%H%M%SZ)" >> "$GITHUB_ENV"
 
       - name: Log in to GHCR
         run: |
@@ -164,28 +133,23 @@ jobs:
       - name: Promote beta to stable
         run: |
           skopeo copy \
-            "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
+            "docker://${IMAGE}@${{ needs.merge-stable.outputs.beta_digest }}" \
             "docker://${IMAGE}:stable"
 
           skopeo copy \
-            "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
+            "docker://${IMAGE}@${{ needs.merge-stable.outputs.beta_digest }}" \
             "docker://${IMAGE}:latest"
 
       - name: Publish stable image tag
         run: |
           skopeo copy \
-            "docker://${IMAGE}@${{ steps.beta.outputs.digest }}" \
+            "docker://${IMAGE}@${{ needs.merge-stable.outputs.beta_digest }}" \
             "docker://${IMAGE}:${RELEASE_TAG}"
 
       - name: Create stable Git tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          COMMIT="${{ steps.beta.outputs.commit }}"
-
           OLD_TAGS="$(
-            git tag --points-at "${COMMIT}" --list "stable-*"
+            git tag --points-at "${{ needs.merge-stable.outputs.beta_commit }}" --list "stable-*"
           )"
 
           for OLD_TAG in ${OLD_TAGS}; do
@@ -198,7 +162,7 @@ jobs:
           done
 
           echo "Creating release tag: ${RELEASE_TAG}"
-          git tag "${RELEASE_TAG}" "${COMMIT}"
+          git tag "${RELEASE_TAG}" "${{ needs.merge-stable.outputs.beta_commit }}"
 
           echo "Publishing release tag: ${RELEASE_TAG}"
           git push origin "refs/tags/${RELEASE_TAG}"

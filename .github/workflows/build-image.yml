@@ -15,6 +15,13 @@ on:
       COSIGN_PRIVATE_KEY:
         required: true
 
+env:
+  IMAGE: ghcr.io/pvermeer/redtide
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
 jobs:
   build:
     name: Build and push image
@@ -23,10 +30,6 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      IMAGE: ghcr.io/pvermeer/redtide
-      REF: ${{ inputs.ref }}
-      CHANNEL: ${{ inputs.channel }}
 
     steps:
       - name: Checkout repository
@@ -39,15 +42,15 @@ jobs:
         run: |
           BUILD_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           COMMIT="$(git rev-parse HEAD)"
-          RELEASE_TAG="${CHANNEL}-${BUILD_TIMESTAMP}"
+          RELEASE_TAG="${{ inputs.channel }}-${BUILD_TIMESTAMP}"
 
           echo "BUILD_TIMESTAMP=${BUILD_TIMESTAMP}" >> "$GITHUB_ENV"
           echo "COMMIT=${COMMIT}" >> "$GITHUB_ENV"
           echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
 
-          echo "Git ref:     ${REF}"
+          echo "Git ref:     ${{ inputs.ref }}"
           echo "Git commit:  ${COMMIT}"
-          echo "Channel:     ${CHANNEL}"
+          echo "Channel:     ${{ inputs.channel }}"
           echo "Release tag: ${RELEASE_TAG}"
 
       - name: Log in to GHCR
@@ -125,13 +128,13 @@ jobs:
         run: |
           podman tag \
             "${IMAGE}:${RELEASE_TAG}" \
-            "${IMAGE}:${CHANNEL}"
+            "${IMAGE}:${{ inputs.channel }}"
 
           podman push \
             --format=oci \
-            "${IMAGE}:${CHANNEL}"
+            "${IMAGE}:${{ inputs.channel }}"
 
-          if [ "${CHANNEL}" = "stable" ]; then
+          if [ "${{ inputs.channel }}" = "stable" ]; then
             podman tag \
               "${IMAGE}:${RELEASE_TAG}" \
               "${IMAGE}:latest"
@@ -143,16 +146,13 @@ jobs:
 
       - name: Create Git release tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           OLD_TAGS="$(
-            git tag --points-at "${COMMIT}" --list "${CHANNEL}-*"
+            git tag --points-at "${COMMIT}" --list "${{ inputs.channel }}-*"
           )"
 
           for OLD_TAG in ${OLD_TAGS}; do
             if [ "${OLD_TAG}" != "${RELEASE_TAG}" ]; then
-              echo "Removing old ${CHANNEL} tag: ${OLD_TAG}"
+              echo "Removing old ${{ inputs.channel }} tag: ${OLD_TAG}"
 
               git tag -d "${OLD_TAG}"
               git push origin --delete "refs/tags/${OLD_TAG}"

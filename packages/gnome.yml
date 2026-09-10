@@ -34,6 +34,11 @@
     - id: blur-my-shell@aunetx
       package: gnome-shell-extension-blur-my-shell
       enable: true
+      dconf:
+        - schema: org/gnome/shell/extensions/blur-my-shell/panel
+          keys:
+            - key: override-background-dynamically
+              value: true
 
     - id: just-perfection-desktop@just-perfection
       package: gnome-shell-extension-just-perfection

@@ -91,15 +91,15 @@ beta
 │ └── Changes merged into beta
 │
 └── Stable release
-│
-├── Merge beta → stable
-│
-├── Promote beta image
-│ └── stable
+│ │
+│ ├── Merge beta → stable
+│ │
+│ └── Promote beta image
+│   └── stable
 │
 └── Build new beta image
-├── Include changes from merge window
-└── Incorporate upstream changes
+  ├── Include changes from merge window
+  └── Incorporate upstream changes
 ```
 
 ## Beta

@@ -182,12 +182,26 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git tag \
-            "${RELEASE_TAG}" \
-            "${{ steps.beta.outputs.commit }}"
+          COMMIT="${{ steps.beta.outputs.commit }}"
 
-          git push origin \
-            "${RELEASE_TAG}"
+          OLD_TAGS="$(
+            git tag --points-at "${COMMIT}" --list "stable-*"
+          )"
+
+          for OLD_TAG in ${OLD_TAGS}; do
+            if [ "${OLD_TAG}" != "${RELEASE_TAG}" ]; then
+              echo "Removing old stable tag: ${OLD_TAG}"
+
+              git tag -d "${OLD_TAG}"
+              git push origin --delete "refs/tags/${OLD_TAG}"
+            fi
+          done
+
+          echo "Creating release tag: ${RELEASE_TAG}"
+          git tag "${RELEASE_TAG}" "${COMMIT}"
+
+          echo "Publishing release tag: ${RELEASE_TAG}"
+          git push origin "refs/tags/${RELEASE_TAG}"
 
   build-beta:
     name: Build New Beta

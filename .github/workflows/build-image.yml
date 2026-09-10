@@ -146,12 +146,24 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git tag \
-            "${RELEASE_TAG}" \
-            "${COMMIT}"
+          OLD_TAGS="$(
+            git tag --points-at "${COMMIT}" --list "${CHANNEL}-*"
+          )"
 
-          git push origin \
-            "${RELEASE_TAG}"
+          for OLD_TAG in ${OLD_TAGS}; do
+            if [ "${OLD_TAG}" != "${RELEASE_TAG}" ]; then
+              echo "Removing old ${CHANNEL} tag: ${OLD_TAG}"
+
+              git tag -d "${OLD_TAG}"
+              git push origin --delete "refs/tags/${OLD_TAG}"
+            fi
+          done
+
+          echo "Creating release tag: ${RELEASE_TAG}"
+          git tag "${RELEASE_TAG}" "${COMMIT}"
+
+          echo "Publishing release tag: ${RELEASE_TAG}"
+          git push origin "refs/tags/${RELEASE_TAG}"
 
       - name: Cleanup
         if: always()

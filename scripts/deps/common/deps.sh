@@ -5,7 +5,7 @@ echo_color "==== Checking dependencies ===="
 needed_deps=(
 	yq
 	jq
-	envsubst
+	gettext # envsubst
 	crudini
 )
 deps_to_install=()

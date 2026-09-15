@@ -156,7 +156,7 @@ for repo_packages in "${repos[@]}"; do
 
 done
 
-echo_color "Commiting changes to container"
+echo_color "Committing changes to container"
 ostree container commit
 
 echo_success "Successfully built: $yml_file"

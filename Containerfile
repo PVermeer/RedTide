@@ -95,6 +95,6 @@ RUN install-keys
 
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \
-    echo_color "Commiting changes to container" && \
+    echo_color "Committing changes to container" && \
     ostree container commit && \
     echo_success "Successfully built image"

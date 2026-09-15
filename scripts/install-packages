@@ -94,22 +94,20 @@ for repo_packages in "${repos[@]}"; do
 
 	# Packages - replace
 	if [ -n "${packages_remove[*]}" ] && [ -n "${packages_install[*]}" ]; then
-		if [ -n "${packages_install[*]}" ]; then
-			echo_color "Replacing packages for $yml_file: '$repo'"
+		echo_color "Replacing packages for $yml_file: '$repo'"
 
-			if [ "$repo" = "fedora" ]; then
-				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
+		if [ "$repo" = "fedora" ]; then
+			rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
 
-			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-				enable_repo "$repo_file" "$repo"
-				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-				[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
+		elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
+			enable_repo "$repo_file" "$repo"
+			rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
+			[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
 
-			else
-				enable_repo_extern "$repo_file" "$repo"
-				rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-				[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
-			fi
+		else
+			enable_repo_extern "$repo_file" "$repo"
+			rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
+			[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
 		fi
 	else
 		# Packages - remove

@@ -9,7 +9,7 @@ POLICY="${POLICY_DIR}/policy.json"
 REGISTRIES_DIR="${POLICY_DIR}/registries.d"
 REGISTRIES_CONFIG="${REGISTRIES_DIR}/redtide.yaml"
 
-IMAGE="ghcr.io/pvermeer/redtide:latest"
+IMAGE="ghcr.io/pvermeer/redtide:stable"
 
 PRIMARY_KEY="${KEY_DIR}/redtide-primary.pub"
 SECONDARY_KEY="${KEY_DIR}/redtide-secondary.pub"

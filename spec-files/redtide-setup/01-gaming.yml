@@ -1,0 +1,14 @@
+page_type: settings
+title: Sunshine
+section: Gaming
+icon: dev.lizardbyte.app.Sunshine
+groups:
+  - settings:
+      - type: switch
+        title: Enable sunshine
+        subtitle: Sunshine autostarts after login
+        actions:
+          - action: systemd
+            type: enable
+            scope: user
+            unit: sunshine.service

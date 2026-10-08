@@ -70,6 +70,10 @@ COPY ./keys $KEYS_DIR
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
 
+COPY ./packages/redtide.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages redtide.yml
+
 COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages nvidia.yml

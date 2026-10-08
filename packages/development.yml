@@ -1,9 +1,12 @@
 - repo: fedora
   install:
+    - appstream
+    - cargo
     - clang
     - cmake
     - crudini
     - curl
+    - desktop-file-utils
     - dnf-plugins-core
     - doxygen
     - flatpak-builder

@@ -123,6 +123,19 @@ for repo_packages in "${repos[@]}"; do
 			if [ "$repo" = "fedora" ]; then
 				rpm-ostree install "${packages_install[@]}"
 
+			elif [ "$repo" = "local" ]; then
+				local_rpms=()
+				for package_name in "${packages_install[@]}"; do
+					file=$(find "$LOCAL_RPM_DIR" -type f -name "${package_name}*.rpm" -print -quit)
+					if [ -z "$file" ]; then
+						echo_error "Local package not found: $package_name"
+					fi
+
+					local_rpms+=("$file")
+				done
+
+				rpm-ostree install "${local_rpms[@]}"
+
 			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
 				enable_repo "$repo_file" "$repo"
 				rpm-ostree install "${packages_install[@]}"

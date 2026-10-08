@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+rpm_spec_dir=$1
+
+source "$(dirname "${BASH_SOURCE[0]}")/deps/common/env.sh"
+
+print_rpm_files() {
+    echo_color "\nRPM file contents:"
+
+    for file in ./rpmbuild/RPMS/**/*.rpm; do
+        echo_color -e -n "\nRPM: "
+        echo " $file"
+
+        echo_color "files:"
+        rpm -qvlp "$file"
+
+        echo_color "scripts:"
+        rpm -qp --scripts "$file"
+    done
+}
+
+for spec_file in "$rpm_spec_dir"/*.spec; do
+
+    mkdir -p "${LOCAL_RPM_DIR}"
+
+    echo "$rpm_spec_dir"
+    echo "$spec_file"
+
+    spec_file_name="${spec_file##*/}"
+    echo "$spec_file_name"
+
+    spec_file_name="${spec_file_name%.*}"
+    echo "$spec_file_name"
+
+    spec_file_sources_dir="${rpm_spec_dir}/${spec_file_name}"
+    echo "$spec_file_sources_dir"
+
+    rm -rf ./rpmbuild
+
+    echo_color "Copying source"
+    mkdir -p ./rpmbuild/SOURCES
+
+    cp -r "${spec_file_sources_dir}/." ./rpmbuild/SOURCES/ &>/dev/null || true
+
+    sources_list=$(ls ./rpmbuild/SOURCES)
+    if [ "$sources_list" ]; then
+        echo "$sources_list"
+    else
+        echo "No source files"
+    fi
+
+    echo_color "\nRPM Lint"
+    rpmlint "./${spec_file}"
+
+    echo_color "\nRPM Build"
+
+    rpmbuild --define "_topdir $PWD/rpmbuild" -ba --noclean "./${spec_file}"
+
+    print_rpm_files
+
+    echo_color "Copy rpm to ./rpms"
+    cp ./rpmbuild/RPMS/**/*.rpm "$LOCAL_RPM_DIR"
+
+    echo_success "Finished building rpm: ${spec_file}"
+
+done

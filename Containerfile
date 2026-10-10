@@ -98,6 +98,10 @@ COPY ./packages/gnome.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages gnome.yml
 
+COPY ./packages/tools.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages tools.yml
+
 COPY ./packages/utilities.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages utilities.yml

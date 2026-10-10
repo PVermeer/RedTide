@@ -40,6 +40,12 @@
             }
         },
         {
+            "label": "Run any-setup",
+            "type": "shell",
+            "command": "../any-setup/target/debug/any-setup --pages-dir ./spec-files/redtide-setup",
+            "problemMatcher": []
+        },
+        {
             "label": "Run silverblue interactive",
             "type": "shell",
             "command": "podman run --rm -it quay.io/fedora/fedora-silverblue:latest bash",

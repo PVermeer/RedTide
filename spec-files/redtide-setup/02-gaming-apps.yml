@@ -1,0 +1,14 @@
+page_type: settings
+section: Gaming
+title: Apps & Tools
+icon: input-gaming-symbolic
+groups:
+  - title: Recommended apps & tools
+    settings:
+      - type: switch
+        title: Install Faugus
+        subtitle: Use Faugus to launch Windows game executables (.exe) with Proton
+        actions:
+          - action: flatpak
+            type: install
+            app: io.github.Faugus.faugus-launcher

@@ -104,7 +104,7 @@ restorecon -v "$POLICY" 2>/dev/null || true
 echo "${POLICY}:"
 cat "$POLICY"
 
-echo_color "Commiting changes to container"
+echo_color "Committing changes to container"
 ostree container commit
 
 echo_success "Signing keys and policy installed successfully"

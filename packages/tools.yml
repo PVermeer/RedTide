@@ -1,0 +1,4 @@
+- repo: fedora
+  install:
+    - lm_sensors
+    - nethogs

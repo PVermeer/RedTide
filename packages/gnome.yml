@@ -39,6 +39,10 @@
           keys:
             - key: override-background-dynamically
               value: true
+        - schema: org/gnome/shell/extensions/blur-my-shell/overview
+          keys:
+            - key: style-components
+              value: 3
 
     - id: just-perfection-desktop@just-perfection
       package: gnome-shell-extension-just-perfection

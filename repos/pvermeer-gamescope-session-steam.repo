@@ -1,0 +1,10 @@
+[copr:copr.fedorainfracloud.org:pvermeer:gamescope-session-steam]
+name=Copr repo for gamescope-session-steam owned by pvermeer
+baseurl=https://download.copr.fedorainfracloud.org/results/pvermeer/gamescope-session-steam/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-pvermeer-gamescope-session-steam
+repo_gpgcheck=0
+enabled=0
+enabled_metadata=1

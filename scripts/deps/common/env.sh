@@ -29,6 +29,14 @@ if [ -z "$KMODS_RPM_DIR" ]; then
 	echo_error "KMODS_RPM_DIR not defined in Containerfile"
 	exit 1
 fi
+if [ -z "$RPM_BUILD_DIR" ]; then
+	echo_error "RPM_BUILD_DIR not defined in Containerfile"
+	exit 1
+fi
+if [ -z "$LOCAL_RPM_DIR" ]; then
+	echo_error "LOCAL_RPM_DIR not defined in Containerfile"
+	exit 1
+fi
 
 export DISTRO_NAME
 export FEDORA_VERSION

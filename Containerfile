@@ -9,7 +9,7 @@ RUN kernel_package=$(rpm -q kernel) && \
 
 RUN cat /tmp/environment
 
-FROM quay.io/fedora/fedora:${FEDORA_MAJOR_VERSION} AS akmods
+FROM quay.io/fedora/fedora:${FEDORA_MAJOR_VERSION} AS builds
 
 ENV BUILD_DIR=/build
 ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
@@ -18,8 +18,11 @@ ENV REPOS_DIR=${BUILD_DIR}/repos
 ENV KEYS_DIR=${BUILD_DIR}/keys
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV ENV_FILE=${BUILD_DIR}/environment
-ENV PATH=${PATH}:${BUILD_DIR}/scripts
+ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
+ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
+ENV PATH=${PATH}:${SCRIPTS_DIR}
 
+# Akmods
 COPY --from=silverblue /tmp/environment ${ENV_FILE}
 COPY --from=silverblue /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo \
     /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo
@@ -36,8 +39,14 @@ COPY ./scripts/build-akmods $SCRIPTS_DIR/build-akmods
 COPY ./repos $REPOS_DIR
 COPY ./keys $KEYS_DIR
 COPY ./packages $PACKAGES_DIR
-
 RUN source $ENV_FILE && build-akmods $KERNEL_VERSION $KMODS_RPM_DIR
+
+# RPM specs
+RUN dnf install -y rpmdevtools rpmlint systemd-rpm-macros
+COPY ./scripts/build-rpms $SCRIPTS_DIR
+
+COPY ./spec-files $RPM_BUILD_DIR/spec-files
+RUN build-rpms $RPM_BUILD_DIR/spec-files
 
 FROM silverblue
 
@@ -47,9 +56,12 @@ ENV PACKAGES_DIR=${BUILD_DIR}/packages
 ENV REPOS_DIR=${BUILD_DIR}/repos
 ENV KEYS_DIR=${BUILD_DIR}/keys
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
-ENV PATH=${PATH}:${BUILD_DIR}/scripts
+ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
+ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
+ENV PATH=${PATH}:${SCRIPTS_DIR}
 
-COPY --from=akmods $KMODS_RPM_DIR $KMODS_RPM_DIR
+COPY --from=builds $LOCAL_RPM_DIR $LOCAL_RPM_DIR
+COPY --from=builds $KMODS_RPM_DIR $KMODS_RPM_DIR
 COPY ./scripts/deps $SCRIPTS_DIR/deps
 COPY ./scripts/install-packages $SCRIPTS_DIR/install-packages
 COPY ./repos $REPOS_DIR
@@ -57,6 +69,10 @@ COPY ./keys $KEYS_DIR
 
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
+
+COPY ./packages/redtide.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages redtide.yml
 
 COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
@@ -82,6 +98,10 @@ COPY ./packages/gnome.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages gnome.yml
 
+COPY ./packages/tools.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages tools.yml
+
 COPY ./packages/utilities.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages utilities.yml
@@ -95,6 +115,6 @@ RUN install-keys
 
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \
-    echo_color "Commiting changes to container" && \
+    echo_color "Committing changes to container" && \
     ostree container commit && \
     echo_success "Successfully built image"

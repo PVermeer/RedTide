@@ -3,7 +3,8 @@ title: Containers
 section: Development
 icon: terminal-distrobox-icon
 groups:
-  - settings:
+  - title: Services
+    settings:
       - type: switch
         title: Enable docker (root)
         subtitle: Enable docker and run docker commands without sudo
@@ -16,3 +17,13 @@ groups:
           - action: usergroup
             type: add
             group: docker
+
+  - title: Apps & Tools
+    settings:
+      - type: switch
+        title: DistroShelf
+        subtitle: Graphical interface for managing Distrobox containers
+        actions:
+          - action: flatpak
+            type: install
+            app: com.ranfdev.DistroShelf

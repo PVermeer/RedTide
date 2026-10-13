@@ -1,0 +1,30 @@
+page_type: settings
+section: Gaming
+title: Apps & Tools
+icon: input-gaming-symbolic
+groups:
+  - title: Recommended apps & tools
+    settings:
+      - type: switch
+        title: ProtonPlus
+        subtitle: Manage Proton, Wine, DXVK, and VKD3D tools for Linux game launchers
+        actions:
+          - action: flatpak
+            type: install
+            app: com.vysp3r.ProtonPlus
+
+      - type: switch
+        title: Faugus
+        subtitle: Use Faugus to launch Windows game executables (.exe) with UMU and Proton
+        actions:
+          - action: flatpak
+            type: install
+            app: io.github.Faugus.faugus-launcher
+
+      - type: switch
+        title: Goverlay
+        subtitle: Easily configure MangoHud, vkBasalt and OptiScaler
+        actions:
+          - action: flatpak
+            type: install
+            app: io.github.benjamimgois.goverlay

@@ -6,8 +6,8 @@ groups:
   - title: Enable some cool services
     settings:
       - type: switch
-        title: Enable Sunshine
-        subtitle: Sunshine game streaming starts after login
+        title: Enable Sunshine (game streaming host)
+        subtitle: Sunshine starts after login
         actions:
           - action: systemd
             type: enable

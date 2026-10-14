@@ -18,6 +18,15 @@ groups:
             type: add
             group: docker
 
+      - type: switch
+        title: Enable keybox
+        subtitle: Share user gpg keys with docker (dev) containers
+        actions:
+          - action: systemd
+            type: enable
+            scope: user
+            unit: keyboxd.socket
+
   - title: Apps & Tools
     settings:
       - type: switch

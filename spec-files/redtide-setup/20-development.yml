@@ -20,7 +20,7 @@ groups:
 
       - type: switch
         title: Enable keybox
-        subtitle: Share user gpg keys with docker (dev) containers
+        subtitle: Share user gpg keys with docker (dev)containers. Container rebuild is needed.
         actions:
           - action: systemd
             type: enable

@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source "$(dirname "${BASH_SOURCE[0]}")/deps/common/env.sh"
+
+KEY_DIR="/etc/pki/containers"
+POLICY_DIR="/etc/containers"
+REGISTRIES_DIR="${POLICY_DIR}/registries.d"
+REDTIDE_REGISTRY_CONFIG_FILE="${REGISTRIES_DIR}/redtide.yaml"
+CONTAINERS_POLICY_FILE="${POLICY_DIR}/policy.json"
+PRIMARY_KEY="${KEY_DIR}/redtide-primary.pub"
+SECONDARY_KEY="${KEY_DIR}/redtide-secondary.pub"
+
+SOURCE_KEY_DIR=$KEYS_DIR
+PRIMARY_KEY_SOURCE="${SOURCE_KEY_DIR}/cosign-redtide-primary.pub"
+SECONDARY_KEY_SOURCE="${SOURCE_KEY_DIR}/cosign-redtide-secondary.pub"
+
+SOURCE_POLICIES_DIR=$POLICIES_DIR
+REDTIDE_REGISTRY_CONFIG_SOURCE="${SOURCE_POLICIES_DIR}/redtide-registry-config.yml"
+CONTAINERS_POLICY_SOURCE="${SOURCE_POLICIES_DIR}/containers.json"
+
+require_file() {
+    if [[ ! -f "$1" ]]; then
+        echo_error "Required file not found: $1"
+        exit 1
+    fi
+}
+
+echo_color "\n==== Installing signing keys ===="
+
+require_file "$PRIMARY_KEY_SOURCE"
+require_file "$SECONDARY_KEY_SOURCE"
+require_file "$REDTIDE_REGISTRY_CONFIG_SOURCE"
+require_file "$CONTAINERS_POLICY_SOURCE"
+
+install -d -m 0755 "$KEY_DIR"
+install -d -m 0755 "$POLICY_DIR"
+install -d -m 0755 "$REGISTRIES_DIR"
+
+echo_color "Installing keys"
+
+install -m 0644 "$PRIMARY_KEY_SOURCE" "$PRIMARY_KEY"
+install -m 0644 "$SECONDARY_KEY_SOURCE" "$SECONDARY_KEY"
+
+restorecon -RF "$KEY_DIR" 2>/dev/null || true
+
+echo "${PRIMARY_KEY}:"
+cat "$PRIMARY_KEY"
+echo "${SECONDARY_KEY}:"
+cat "$SECONDARY_KEY"
+
+echo_color "Configuring RedTide registry"
+
+install -m 0644 "$REDTIDE_REGISTRY_CONFIG_SOURCE" "$REDTIDE_REGISTRY_CONFIG_FILE"
+restorecon -v "$REDTIDE_REGISTRY_CONFIG_FILE" 2>/dev/null || true
+echo "${REDTIDE_REGISTRY_CONFIG_FILE}:"
+cat "$REDTIDE_REGISTRY_CONFIG_FILE"
+
+echo_color "Configuring container signature policy"
+
+install -m 0644 "$CONTAINERS_POLICY_SOURCE" "$CONTAINERS_POLICY_FILE"
+restorecon -v "$CONTAINERS_POLICY_FILE" 2>/dev/null || true
+
+echo "${CONTAINERS_POLICY_FILE}:"
+cat "$CONTAINERS_POLICY_FILE"
+echo ""
+
+echo_color "Committing changes to container"
+ostree container commit
+
+echo_success "Signing keys and policy installed successfully"

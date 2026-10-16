@@ -16,6 +16,7 @@ ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
 ENV PACKAGES_DIR=${BUILD_DIR}/packages
 ENV REPOS_DIR=${BUILD_DIR}/repos
 ENV KEYS_DIR=${BUILD_DIR}/keys
+ENV POLICIES_DIR=${BUILD_DIR}/policies
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV ENV_FILE=${BUILD_DIR}/environment
 ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
@@ -55,6 +56,7 @@ ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
 ENV PACKAGES_DIR=${BUILD_DIR}/packages
 ENV REPOS_DIR=${BUILD_DIR}/repos
 ENV KEYS_DIR=${BUILD_DIR}/keys
+ENV POLICIES_DIR=${BUILD_DIR}/policies
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
 ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
@@ -110,8 +112,10 @@ COPY ./packages/vm.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages vm.yml
 
-COPY ./scripts/install-keys $SCRIPTS_DIR/install-keys
-RUN install-keys
+COPY ./policies ${POLICIES_DIR}/
+COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
+RUN --mount=type=cache,dst=/var/cache \
+    install-container-config
 
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \

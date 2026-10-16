@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: Build Beta
+    name: Build beta
     permissions:
       contents: write
       packages: write

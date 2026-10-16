@@ -40,9 +40,9 @@
             }
         },
         {
-            "label": "Run any-setup",
+            "label": "Run any-setup (from repo)",
             "type": "shell",
-            "command": "../any-setup/target/debug/any-setup --pages-dir ./spec-files/redtide-setup",
+            "command": "../any-setup/target/debug/any-setup --pages-dir ./spec-files/redtide-setup/pages",
             "problemMatcher": []
         },
         {

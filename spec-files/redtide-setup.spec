@@ -7,10 +7,7 @@ Url: https://github.com/PVermeer/RedTide
 
 Source0: redtide-setup.desktop
 Source1: config.yml
-Source2: 00-home.yml
-Source3: 01-gaming-setup.yml
-Source4: 02-gaming-apps.yml
-Source5: 10-development.yml
+Source2: pages
 
 BuildRequires: systemd-rpm-macros
 BuildRequires: desktop-file-utils
@@ -29,11 +26,11 @@ mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_datadir}/any-setup/pages
 
 install -Dm0644 %{SOURCE0} %{buildroot}%{_datadir}/applications/redtide-setup.desktop
-install -Dm0644 %{SOURCE1} %{buildroot}%{_datadir}/any-setup/
-install -Dm0644 %{SOURCE2} %{buildroot}%{_datadir}/any-setup/pages/
-install -Dm0644 %{SOURCE3} %{buildroot}%{_datadir}/any-setup/pages/
-install -Dm0644 %{SOURCE4} %{buildroot}%{_datadir}/any-setup/pages/
-install -Dm0644 %{SOURCE5} %{buildroot}%{_datadir}/any-setup/pages/
+install -Dm0644 %{SOURCE1} %{buildroot}%{_datadir}/any-setup/config.yml
+
+for page_config in %{SOURCE2}/*; do
+    install -Dm0644 "$page_config" %{buildroot}%{_datadir}/any-setup/pages/
+done
 
 %check
 desktop-file-validate %{buildroot}%{_datadir}/applications/redtide-setup.desktop
@@ -41,7 +38,4 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/redtide-setup.desktop
 %files
 %{_datadir}/applications/redtide-setup.desktop
 %{_datadir}/any-setup/config.yml
-%{_datadir}/any-setup/pages/00-home.yml
-%{_datadir}/any-setup/pages/01-gaming-setup.yml
-%{_datadir}/any-setup/pages/02-gaming-apps.yml
-%{_datadir}/any-setup/pages/10-development.yml
+%{_datadir}/any-setup/pages/*

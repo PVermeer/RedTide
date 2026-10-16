@@ -6,7 +6,7 @@
         {
             "label": "Build image with podman",
             "type": "shell",
-            "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
+            "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -15,7 +15,7 @@
         {
             "label": "Build image with podman (no-cache)",
             "type": "shell",
-            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
+            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -27,15 +27,6 @@
             "command": "podman container start registry || podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:2 && podman push --format=oci localhost:5000/redtide:latest",
             "group": {
                 "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "Build test with log file (no-cache)",
-            "type": "shell",
-            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
-            "group": {
-                "kind": "test",
                 "isDefault": true
             }
         },

@@ -3,21 +3,21 @@ set -euo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/deps/common/env.sh"
 
-KEY_DIR="/etc/pki/containers"
-POLICY_DIR="/etc/containers"
-REGISTRIES_DIR="${POLICY_DIR}/registries.d"
-REDTIDE_REGISTRY_CONFIG_FILE="${REGISTRIES_DIR}/redtide.yaml"
-CONTAINERS_POLICY_FILE="${POLICY_DIR}/policy.json"
-PRIMARY_KEY="${KEY_DIR}/redtide-primary.pub"
-SECONDARY_KEY="${KEY_DIR}/redtide-secondary.pub"
+target_keys_dir="/usr/etc/pki/containers"
+target_policy_dir="/usr/etc/containers"
+target_registries_dir="${target_policy_dir}/registries.d"
+target_redtide_registry_config_file="${target_registries_dir}/redtide.yaml"
+target_containers_policy_file="${target_policy_dir}/policy.json"
+target_primary_key="${target_keys_dir}/redtide-primary.pub"
+target_secondary_key="${target_keys_dir}/redtide-secondary.pub"
 
-SOURCE_KEY_DIR=$KEYS_DIR
-PRIMARY_KEY_SOURCE="${SOURCE_KEY_DIR}/cosign-redtide-primary.pub"
-SECONDARY_KEY_SOURCE="${SOURCE_KEY_DIR}/cosign-redtide-secondary.pub"
+source_key_dir=$KEYS_DIR
+source_primary_key="${source_key_dir}/cosign-redtide-primary.pub"
+source_secondary_key="${source_key_dir}/cosign-redtide-secondary.pub"
 
-SOURCE_POLICIES_DIR=$POLICIES_DIR
-REDTIDE_REGISTRY_CONFIG_SOURCE="${SOURCE_POLICIES_DIR}/redtide-registry-config.yml"
-CONTAINERS_POLICY_SOURCE="${SOURCE_POLICIES_DIR}/containers.json"
+source_policies_dir=$POLICIES_DIR
+source_redtide_registry_config="${source_policies_dir}/redtide-registry-config.yml"
+source_containers_policy_source="${source_policies_dir}/containers.json"
 
 require_file() {
     if [[ ! -f "$1" ]]; then
@@ -28,41 +28,41 @@ require_file() {
 
 echo_color "\n==== Installing signing keys ===="
 
-require_file "$PRIMARY_KEY_SOURCE"
-require_file "$SECONDARY_KEY_SOURCE"
-require_file "$REDTIDE_REGISTRY_CONFIG_SOURCE"
-require_file "$CONTAINERS_POLICY_SOURCE"
+require_file "$source_primary_key"
+require_file "$source_secondary_key"
+require_file "$source_redtide_registry_config"
+require_file "$source_containers_policy_source"
 
-install -d -m 0755 "$KEY_DIR"
-install -d -m 0755 "$POLICY_DIR"
-install -d -m 0755 "$REGISTRIES_DIR"
+install -d -m 0755 "$target_keys_dir"
+install -d -m 0755 "$target_policy_dir"
+install -d -m 0755 "$target_registries_dir"
 
 echo_color "Installing keys"
 
-install -m 0644 "$PRIMARY_KEY_SOURCE" "$PRIMARY_KEY"
-install -m 0644 "$SECONDARY_KEY_SOURCE" "$SECONDARY_KEY"
+install -m 0644 "$source_primary_key" "$target_primary_key"
+install -m 0644 "$source_secondary_key" "$target_secondary_key"
 
-restorecon -RF "$KEY_DIR" 2>/dev/null || true
+restorecon -RF "$target_keys_dir" 2>/dev/null || true
 
-echo "${PRIMARY_KEY}:"
-cat "$PRIMARY_KEY"
-echo "${SECONDARY_KEY}:"
-cat "$SECONDARY_KEY"
+echo "${target_primary_key}:"
+cat "$target_primary_key"
+echo "${target_secondary_key}:"
+cat "$target_secondary_key"
 
 echo_color "Configuring RedTide registry"
 
-install -m 0644 "$REDTIDE_REGISTRY_CONFIG_SOURCE" "$REDTIDE_REGISTRY_CONFIG_FILE"
-restorecon -v "$REDTIDE_REGISTRY_CONFIG_FILE" 2>/dev/null || true
-echo "${REDTIDE_REGISTRY_CONFIG_FILE}:"
-cat "$REDTIDE_REGISTRY_CONFIG_FILE"
+install -m 0644 "$source_redtide_registry_config" "$target_redtide_registry_config_file"
+restorecon -v "$target_redtide_registry_config_file" 2>/dev/null || true
+echo "${target_redtide_registry_config_file}:"
+cat "$target_redtide_registry_config_file"
 
 echo_color "Configuring container signature policy"
 
-install -m 0644 "$CONTAINERS_POLICY_SOURCE" "$CONTAINERS_POLICY_FILE"
-restorecon -v "$CONTAINERS_POLICY_FILE" 2>/dev/null || true
+install -m 0644 "$source_containers_policy_source" "$target_containers_policy_file"
+restorecon -v "$target_containers_policy_file" 2>/dev/null || true
 
-echo "${CONTAINERS_POLICY_FILE}:"
-cat "$CONTAINERS_POLICY_FILE"
+echo "${target_containers_policy_file}:"
+cat "$target_containers_policy_file"
 echo ""
 
 echo_color "Committing changes to container"

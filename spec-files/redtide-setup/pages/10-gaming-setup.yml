@@ -1,13 +1,13 @@
 page_type: settings
 section: Gaming
-title: Services
+title: Setup
 icon: applications-engineering-symbolic
 groups:
-  - title: Enable some cool services
+  - title: Game streaming
     settings:
       - type: switch
-        title: Enable Sunshine (game streaming host)
-        subtitle: Sunshine starts after login
+        title: Enable Sunshine
+        subtitle: Sunshine / Moonlight game streaming host & client
         actions:
           - action: systemd
             type: enable
@@ -15,9 +15,50 @@ groups:
             unit: sunshine.service
 
       - type: switch
+        title: Install Moonlight
+        subtitle: Stream games and other applications from another PC running Sunshine
+        actions:
+          - action: flatpak
+            type: install
+            app: com.moonlight_stream.Moonlight
+
+      - type: switch
+        title: Enable wake-on-lan
+        subtitle: Wake PC from Moonlight client
+        actions:
+          - action: udev
+            type: add
+            order: 81
+            name: wol
+            rule:
+              - action:
+                  operator: match
+                  value: add
+              - subsystem:
+                  operator: match
+                  value: net
+              - name:
+                  operator: match
+                  value: "en*"
+              - run:
+                  operator: append
+                  value: "/usr/bin/ethtool -s $name wol g"
+
+  - title: Performance
+    settings:
+      - type: switch
         title: Enable gamemode
         subtitle: Add current user to the gamemode group to enable more features
         actions:
           - action: usergroup
             type: add
             group: gamemode
+
+      - type: switch
+        title: Enable AMD gpu overclock features
+        subtitle: Set AMD kernel driver to allow gpu overclocks
+        actions:
+          - action: rpmostree
+            type: kargs
+            add:
+              - amdgpu.ppfeaturemask=0xFFF7FFFF

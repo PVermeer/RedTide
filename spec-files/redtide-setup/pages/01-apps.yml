@@ -5,8 +5,8 @@ groups:
   - title: Highly recommended apps
     settings:
       - type: switch
-        title: Firefox
-        subtitle: Fast, Private & Safe Web Browser. Replaces the stock one with faster updates.
+        title: Firefox (Flathub)
+        subtitle: Replaces the stock one with faster security updates.
         actions:
           - action: flatpak
             type: install

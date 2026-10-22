@@ -35,4 +35,5 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: com.ranfdev.DistroShelf

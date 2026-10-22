@@ -8,6 +8,7 @@ Url: https://github.com/PVermeer/RedTide
 Source0: redtide-setup.desktop
 Source1: config.yml
 Source2: pages
+Source3: configs
 
 BuildRequires: systemd-rpm-macros
 BuildRequires: desktop-file-utils
@@ -24,12 +25,17 @@ The user setup application for RedTide using any-setup
 %install
 mkdir -p %{buildroot}%{_datadir}/applications
 mkdir -p %{buildroot}%{_datadir}/any-setup/pages
+mkdir -p %{buildroot}%{_datadir}/any-setup/configs
 
 install -Dm0644 %{SOURCE0} %{buildroot}%{_datadir}/applications/redtide-setup.desktop
 install -Dm0644 %{SOURCE1} %{buildroot}%{_datadir}/any-setup/config.yml
 
 for page_config in %{SOURCE2}/*; do
     install -Dm0644 "$page_config" %{buildroot}%{_datadir}/any-setup/pages/
+done
+
+for config_file in %{SOURCE3}/*; do
+    install -Dm0644 "$config_file" %{buildroot}%{_datadir}/any-setup/configs/
 done
 
 %check
@@ -39,3 +45,4 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/redtide-setup.desktop
 %{_datadir}/applications/redtide-setup.desktop
 %{_datadir}/any-setup/config.yml
 %{_datadir}/any-setup/pages/*
+%{_datadir}/any-setup/configs/*

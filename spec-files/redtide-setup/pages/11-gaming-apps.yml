@@ -3,7 +3,7 @@ section: Gaming
 title: Apps & Tools
 icon: input-gaming-symbolic
 groups:
-  - title: Recommended apps & tools
+  - title: Recommended gaming apps & tools
     settings:
       - type: switch
         title: ProtonPlus
@@ -11,15 +11,8 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: com.vysp3r.ProtonPlus
-
-      - type: switch
-        title: Faugus
-        subtitle: Use Faugus to launch Windows game executables (.exe) with UMU and Proton
-        actions:
-          - action: flatpak
-            type: install
-            app: io.github.Faugus.faugus-launcher
 
       - type: switch
         title: Goverlay
@@ -27,4 +20,14 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: io.github.benjamimgois.goverlay
+
+      - type: switch
+        title: Faugus
+        subtitle: Use Faugus to launch Windows game executables (.exe) with UMU and Proton
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: io.github.Faugus.faugus-launcher

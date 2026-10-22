@@ -2,14 +2,24 @@ page_type: settings
 title: Settings
 icon: preferences-system-symbolic
 groups:
-  - title: Gnome extra settings
+  - title: Gnome
     settings:
       - type: switch
         title: Disable logout prompt
-        subtitle: Set Gnome to not show a prompt on logout / restart / shutdown
+        subtitle: Do not show a prompt on logout / restart / shutdown
         actions:
           - action: dconf
             type: set
             schema: org.gnome.SessionManager
             key: logout-prompt
             value: "false"
+
+  - title: Sound
+    description: Upmixing requires a surround profile (5.1 / 7.1) in Gnome Settings -> Sound.
+    settings:
+      - type: switch
+        title: Enable stereo to surround upmixing
+        subtitle: Upmix stereo to more speakers
+        actions:
+          - action: symlink
+            pipewire: 40-upmix.conf

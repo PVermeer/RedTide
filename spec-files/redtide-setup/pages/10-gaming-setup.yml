@@ -4,6 +4,10 @@ title: Setup
 icon: applications-engineering-symbolic
 groups:
   - title: Game streaming
+    description: Sunshine -> Moonlight game streaming setup
+    link:
+      title: More info
+      url: https://docs.lizardbyte.dev/projects/sunshine/latest
     settings:
       - type: switch
         title: Enable Sunshine
@@ -20,29 +24,15 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: com.moonlight_stream.Moonlight
 
       - type: switch
         title: Enable wake-on-lan
         subtitle: Wake PC from Moonlight client
         actions:
-          - action: udev
-            type: add
-            order: 81
-            name: wol
-            rule:
-              - action:
-                  operator: match
-                  value: add
-              - subsystem:
-                  operator: match
-                  value: net
-              - name:
-                  operator: match
-                  value: "en*"
-              - run:
-                  operator: append
-                  value: "/usr/bin/ethtool -s $name wol g"
+          - action: symlink
+            udev: 81-wol.rules
 
   - title: Performance
     settings:

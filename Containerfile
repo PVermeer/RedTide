@@ -72,10 +72,6 @@ COPY ./keys $KEYS_DIR
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
 
-COPY ./packages/redtide.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages redtide.yml
-
 COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages nvidia.yml
@@ -116,6 +112,10 @@ COPY ./policies ${POLICIES_DIR}/
 COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
 RUN --mount=type=cache,dst=/var/cache \
     install-container-config
+
+COPY ./packages/redtide.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages redtide.yml
 
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \

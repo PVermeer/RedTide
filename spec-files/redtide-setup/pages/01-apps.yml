@@ -1,6 +1,6 @@
 page_type: settings
 title: Apps
-icon: package-x-generic-symbolic
+icon: preferences-desktop-apps-symbolic
 groups:
   - title: Highly recommended apps
     settings:
@@ -10,9 +10,10 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: org.mozilla.firefox
 
-  - title: Some more useful apps
+  - title: Gnome utilities
     settings:
       - type: switch
         title: Bazaar
@@ -20,6 +21,7 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: io.github.kolunmi.Bazaar
 
       - type: switch
@@ -28,6 +30,7 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: com.mattjakeman.ExtensionManager
 
       - type: switch
@@ -36,6 +39,7 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: it.mijorus.gearlever
 
       - type: switch
@@ -44,6 +48,7 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: org.pvermeer.WebAppHub
 
       - type: switch
@@ -52,6 +57,7 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: com.usebottles.bottles
 
       - type: switch
@@ -60,4 +66,17 @@ groups:
         actions:
           - action: flatpak
             type: install
+            repo: flathub
             app: io.github.flattool.Ignition
+
+  - title: Cloud services
+    settings:
+      - type: switch
+        title: Nextcloud
+        subtitle: Install nextcloud with Files integration
+        actions:
+          - action: rpmostree
+            type: install
+            repo: flathub
+            packages:
+              - nextcloud-client

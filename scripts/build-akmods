@@ -37,23 +37,39 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
                 dnf -y install "${kmod_packages[@]}"
                 [ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
             fi
+
+            echo_color "Killing potential akmod background builds from post scripts"
+
+            echo "Akmods processes:"
+            pgrep -l -x akmods || echo "Nothing found"
+            echo_warning "Killing akmods builds"
+            sudo pkill -x akmods || echo "Nothing found"
+            echo "Akmods processes:"
+            pgrep -l -x akmods || echo "Nothing found"
         fi
 
         for name in "${kmod_names[@]}"; do
+            echo_color "Cleaning kmod build cache"
+            sudo rm -rf /var/cache/akmods/*
+
             echo_color "Building kmod package $package_config: '$name'"
 
             akmods --force --kernel "$kernel_version" --kmod "$name"
 
             if ! test -n "$(find "/var/cache/akmods/" -name '*.rpm' -print -quit)"; then
                 echo_error "Failed to build kmod $name"
-                for log in /var/cache/akmods/*/*.failed.log; do
+                for log in /var/cache/akmods/*/*.log; do
+                    echo_error -e "\n${log}:"
                     cat "$log"
+                    echo ""
                 done
                 exit 1
             fi
 
             mkdir -p "${destination}/${name}"
             mv /var/cache/akmods/*/*.rpm "${destination}/${name}/"
+
+            echo_color "Kmod destination list:"
             ls "${destination}/${name}/"
 
             echo_success "Successfully built kmod for $package_config: '$name'"

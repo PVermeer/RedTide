@@ -73,10 +73,9 @@ groups:
     settings:
       - type: switch
         title: Nextcloud
-        subtitle: Install nextcloud with Files integration
+        subtitle: Install Nextcloud with Files integration
         actions:
           - action: rpmostree
             type: install
-            repo: flathub
             packages:
               - nextcloud-client

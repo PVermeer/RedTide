@@ -79,3 +79,17 @@ groups:
             type: install
             packages:
               - nextcloud-client
+
+  - title: Vpn's
+    settings:
+      - type: switch
+        title: Mullvad
+        subtitle: Mullvad VPN
+        actions:
+          - action: symlink
+            rpmrepo: mullvad.repo
+
+          - action: rpmostree
+            type: install
+            packages:
+              - mullvad-vpn

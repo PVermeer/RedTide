@@ -2,6 +2,13 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "silverblue-point-release",
+            "type": "promptString",
+            "description": "Enter a point release (.20261016.0)",
+        }
+    ],
     "tasks": [
         {
             "label": "Build image with podman",
@@ -16,6 +23,24 @@
             "label": "Build image with podman (no-cache)",
             "type": "shell",
             "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build a point release image with podman",
+            "type": "shell",
+            "command": "podman build --pull --build-arg=SILVERBLUE_IMAGE_SOURCE=quay.io/fedora-ostree-desktops/silverblue --build-arg=SILVERBLUE_POINT_RELEASE=${input:silverblue-point-release} -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build a point release image with podman (no-cache)",
+            "type": "shell",
+            "command": "podman build --no-cache --pull --build-arg=SILVERBLUE_IMAGE_SOURCE=quay.io/fedora-ostree-desktops/silverblue --build-arg=SILVERBLUE_POINT_RELEASE=${input:silverblue-point-release} -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
             "group": {
                 "kind": "build",
                 "isDefault": true

@@ -1,6 +1,8 @@
 ARG FEDORA_MAJOR_VERSION=44
+ARG SILVERBLUE_IMAGE_SOURCE=quay.io/fedora/fedora-silverblue
+ARG SILVERBLUE_POINT_RELEASE=""
 
-FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION} AS silverblue
+FROM ${SILVERBLUE_IMAGE_SOURCE}:${FEDORA_MAJOR_VERSION}${SILVERBLUE_POINT_RELEASE} AS silverblue
 
 RUN kernel_package=$(rpm -q kernel) && \
     kernel_version=${kernel_package#kernel-} && \

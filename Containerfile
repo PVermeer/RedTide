@@ -82,6 +82,10 @@ COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages multimedia.yml
 
+COPY ./packages/gaming.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages gaming.yml
+
 COPY ./packages/containers.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages containers.yml
@@ -89,10 +93,6 @@ RUN --mount=type=cache,dst=/var/cache \
 COPY ./packages/development.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages development.yml
-
-COPY ./packages/gaming.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages gaming.yml
 
 COPY ./packages/gnome.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \

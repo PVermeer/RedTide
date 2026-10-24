@@ -3,6 +3,25 @@ section: Gaming
 title: Setup
 icon: applications-engineering-symbolic
 groups:
+  - title: Performance
+    settings:
+      - type: switch
+        title: Enable gamemode
+        subtitle: Add current user to the gamemode group to enable more features
+        actions:
+          - action: usergroup
+            type: add
+            group: gamemode
+
+      - type: switch
+        title: Enable AMD gpu overclock features
+        subtitle: Set AMD kernel driver to allow gpu overclocks
+        actions:
+          - action: rpmostree
+            type: kargs
+            add:
+              - amdgpu.ppfeaturemask=0xFFF7FFFF
+
   - title: Game streaming
     description: Sunshine -> Moonlight game streaming setup
     link:
@@ -33,22 +52,3 @@ groups:
         actions:
           - action: symlink
             udev: 81-wol.rules
-
-  - title: Performance
-    settings:
-      - type: switch
-        title: Enable gamemode
-        subtitle: Add current user to the gamemode group to enable more features
-        actions:
-          - action: usergroup
-            type: add
-            group: gamemode
-
-      - type: switch
-        title: Enable AMD gpu overclock features
-        subtitle: Set AMD kernel driver to allow gpu overclocks
-        actions:
-          - action: rpmostree
-            type: kargs
-            add:
-              - amdgpu.ppfeaturemask=0xFFF7FFFF

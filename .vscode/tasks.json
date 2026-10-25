@@ -2,11 +2,18 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "silverblue-point-release",
+            "type": "promptString",
+            "description": "Enter a point release (.20261016.0)",
+        }
+    ],
     "tasks": [
         {
             "label": "Build image with podman",
             "type": "shell",
-            "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
+            "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -15,7 +22,25 @@
         {
             "label": "Build image with podman (no-cache)",
             "type": "shell",
-            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest .",
+            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build a point release image with podman",
+            "type": "shell",
+            "command": "podman build --pull --build-arg=SILVERBLUE_IMAGE_SOURCE=quay.io/fedora-ostree-desktops/silverblue --build-arg=SILVERBLUE_POINT_RELEASE=${input:silverblue-point-release} -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build a point release image with podman (no-cache)",
+            "type": "shell",
+            "command": "podman build --no-cache --pull --build-arg=SILVERBLUE_IMAGE_SOURCE=quay.io/fedora-ostree-desktops/silverblue --build-arg=SILVERBLUE_POINT_RELEASE=${input:silverblue-point-release} -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -24,25 +49,16 @@
         {
             "label": "Push latest image to local registry",
             "type": "shell",
-            "command": "podman container start registry || podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:2 && podman push --format=oci localhost:5000/redtide:latest",
+            "command": "podman container start registry || podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:latest && podman push --format=oci localhost:5000/redtide:latest",
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
         },
         {
-            "label": "Build test with log file (no-cache)",
+            "label": "Run any-setup (from repo)",
             "type": "shell",
-            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
-            "group": {
-                "kind": "test",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "Run any-setup",
-            "type": "shell",
-            "command": "../any-setup/target/debug/any-setup --pages-dir ./spec-files/redtide-setup",
+            "command": "../any-setup/target/debug/any-setup --pages-dir ./spec-files/redtide-setup/pages --configs-dir ./spec-files/redtide-setup/configs",
             "problemMatcher": []
         },
         {

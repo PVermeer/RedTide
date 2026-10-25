@@ -1,3 +1,11 @@
+# https://rpmfusion.org/Howto/NVIDIA?highlight=%28%5CbCategoryHowto%5Cb%29#OSTree_.28Silverblue.2FKinoite.2Fetc.29
+
+# sudo rpm-ostree kargs --append=rd.driver.blacklist=nouveau,nova_core --append=modprobe.blacklist=nouveau,nova_core # this might not be needed at some point when ostree systems will support the standard way to specify this.
+# Not implementing this because I have no hardware to test it. I don't think it's needed but if users reports show it's needed
+# it can be added to RedTide Setup utility. Not going to support secure-boot.
+
+# Support this until FOSS implementation is good enough
+
 - repo: rpmfusion-nonfree-nvidia-driver
   repo_file: rpmfusion-nonfree-nvidia-driver.repo
   disable_repo: false

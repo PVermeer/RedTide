@@ -1,18 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_RAW="https://raw.githubusercontent.com/pvermeer/redtide/main"
+repo_raw="https://raw.githubusercontent.com/pvermeer/redtide/main"
 
-KEY_DIR="/etc/pki/containers"
-POLICY_DIR="/etc/containers"
-POLICY="${POLICY_DIR}/policy.json"
-REGISTRIES_DIR="${POLICY_DIR}/registries.d"
-REGISTRIES_CONFIG="${REGISTRIES_DIR}/redtide.yaml"
+key_dir="/etc/pki/containers"
+policy_dir="/etc/containers"
+policy="${policy_dir}/policy.json"
+policy_backup="${policy}.redtide-backup"
+registries_dir="${policy_dir}/registries.d"
+registries_config="${registries_dir}/redtide.yaml"
 
-IMAGE="ghcr.io/pvermeer/redtide:stable"
+image="ghcr.io/pvermeer/redtide:stable"
 
-PRIMARY_KEY="${KEY_DIR}/redtide-primary.pub"
-SECONDARY_KEY="${KEY_DIR}/redtide-secondary.pub"
+primary_key="${key_dir}/redtide-primary.pub"
+secondary_key="${key_dir}/redtide-secondary.pub"
+
+restore_policy() {
+    local rc=$?
+    trap - EXIT
+
+    if [[ -f "$policy_backup" ]]; then
+        echo
+        echo "==> Restoring original container policy"
+
+        if cp -a "$policy_backup" "$policy"; then
+            rm -f "$policy_backup"
+            restorecon -v "$policy" 2>/dev/null || true
+            echo "Original policy restored."
+        else
+            echo "ERROR: Failed to restore original policy from $policy_backup" >&2
+            rc=1
+        fi
+    fi
+
+    exit "$rc"
+}
+trap restore_policy EXIT
 
 require_root() {
     if [[ "${EUID}" -ne 0 ]]; then
@@ -34,42 +57,43 @@ require_root
 require_command wget
 require_command jq
 require_command rpm-ostree
+
 echo "==> Creating required directories"
 
-install -d -m 0755 "$KEY_DIR"
-install -d -m 0755 "$POLICY_DIR"
-install -d -m 0755 "$REGISTRIES_DIR"
+install -d -m 0755 "$key_dir"
+install -d -m 0755 "$policy_dir"
+install -d -m 0755 "$registries_dir"
 
 echo "==> Downloading RedTide signing keys"
 
 wget \
     --https-only \
     --secure-protocol=TLSv1_2 \
-    -O "$PRIMARY_KEY" \
-    "${REPO_RAW}/keys/cosign-redtide-primary.pub"
+    -O "$primary_key" \
+    "${repo_raw}/keys/cosign-redtide-primary.pub"
 
 wget \
     --https-only \
     --secure-protocol=TLSv1_2 \
-    -O "$SECONDARY_KEY" \
-    "${REPO_RAW}/keys/cosign-redtide-secondary.pub"
+    -O "$secondary_key" \
+    "${repo_raw}/keys/cosign-redtide-secondary.pub"
 
-chmod 0644 "$PRIMARY_KEY" "$SECONDARY_KEY"
-restorecon -RF "$KEY_DIR" 2>/dev/null || true
+chmod 0644 "$primary_key" "$secondary_key"
+restorecon -RF "$key_dir" 2>/dev/null || true
 
 echo "==> Configuring RedTide signing keys"
 
-cat >"$REGISTRIES_CONFIG" <<'EOF'
+cat >"$registries_config" <<'EOF'
 docker:
   ghcr.io/pvermeer/redtide:
     use-sigstore-attachments: true
 EOF
 
-chmod 0644 "$REGISTRIES_CONFIG"
-restorecon -v "$REGISTRIES_CONFIG" 2>/dev/null || true
+chmod 0644 "$registries_config"
+restorecon -v "$registries_config" 2>/dev/null || true
 
-if [[ ! -f "$POLICY" ]]; then
-    cat >"$POLICY" <<'EOF'
+if [[ ! -f "$policy" ]]; then
+    cat >"$policy" <<'EOF'
 {
   "default": [
     {
@@ -83,13 +107,17 @@ if [[ ! -f "$POLICY" ]]; then
 EOF
 fi
 
-cp -a "$POLICY" "${POLICY}.redtide-backup"
+if [[ ! -f "$policy_backup" ]]; then
+    cp -a "$policy" "$policy_backup"
+else
+    echo "WARN: Using existing policy backup: $policy_backup" >&2
+fi
 
 tmp_policy="$(mktemp)"
 
 jq \
-    --arg primary "$PRIMARY_KEY" \
-    --arg secondary "$SECONDARY_KEY" \
+    --arg primary "$primary_key" \
+    --arg secondary "$secondary_key" \
     '
     .default = [
         {
@@ -110,18 +138,18 @@ jq \
         }
     ]
     ' \
-    "$POLICY" >"$tmp_policy"
+    "$policy" >"$tmp_policy"
 
-install -m 0644 "$tmp_policy" "$POLICY"
+install -m 0644 "$tmp_policy" "$policy"
 rm -f "$tmp_policy"
 
-restorecon -v "$POLICY" 2>/dev/null || true
+restorecon -v "$policy" 2>/dev/null || true
 
 echo
 echo "==> Rebasing to RedTide"
 echo
 
-rpm-ostree rebase "ostree-image-signed:registry:${IMAGE}"
+rpm-ostree rebase "ostree-image-signed:registry:${image}"
 
 echo
 echo "RedTide has been staged successfully."

@@ -1,6 +1,8 @@
 ARG FEDORA_MAJOR_VERSION=44
+ARG SILVERBLUE_IMAGE_SOURCE=quay.io/fedora/fedora-silverblue
+ARG SILVERBLUE_POINT_RELEASE=""
 
-FROM quay.io/fedora/fedora-silverblue:${FEDORA_MAJOR_VERSION} AS silverblue
+FROM ${SILVERBLUE_IMAGE_SOURCE}:${FEDORA_MAJOR_VERSION}${SILVERBLUE_POINT_RELEASE} AS silverblue
 
 RUN kernel_package=$(rpm -q kernel) && \
     kernel_version=${kernel_package#kernel-} && \
@@ -16,6 +18,7 @@ ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
 ENV PACKAGES_DIR=${BUILD_DIR}/packages
 ENV REPOS_DIR=${BUILD_DIR}/repos
 ENV KEYS_DIR=${BUILD_DIR}/keys
+ENV POLICIES_DIR=${BUILD_DIR}/policies
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV ENV_FILE=${BUILD_DIR}/environment
 ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
@@ -55,6 +58,7 @@ ENV SCRIPTS_DIR=${BUILD_DIR}/scripts
 ENV PACKAGES_DIR=${BUILD_DIR}/packages
 ENV REPOS_DIR=${BUILD_DIR}/repos
 ENV KEYS_DIR=${BUILD_DIR}/keys
+ENV POLICIES_DIR=${BUILD_DIR}/policies
 ENV KMODS_RPM_DIR=${BUILD_DIR}/akmods-rpms
 ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
 ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
@@ -70,10 +74,6 @@ COPY ./keys $KEYS_DIR
 RUN --mount=type=cache,dst=/var/cache \
     rm -rf /var/cache/*
 
-COPY ./packages/redtide.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages redtide.yml
-
 COPY ./packages/nvidia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages nvidia.yml
@@ -82,6 +82,10 @@ COPY ./packages/multimedia.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages multimedia.yml
 
+COPY ./packages/gaming.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages gaming.yml
+
 COPY ./packages/containers.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages containers.yml
@@ -89,10 +93,6 @@ RUN --mount=type=cache,dst=/var/cache \
 COPY ./packages/development.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages development.yml
-
-COPY ./packages/gaming.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages gaming.yml
 
 COPY ./packages/gnome.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
@@ -110,8 +110,14 @@ COPY ./packages/vm.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages vm.yml
 
-COPY ./scripts/install-keys $SCRIPTS_DIR/install-keys
-RUN install-keys
+COPY ./policies ${POLICIES_DIR}/
+COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
+RUN --mount=type=cache,dst=/var/cache \
+    install-container-config
+
+COPY ./packages/redtide.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages redtide.yml
 
 RUN source $SCRIPTS_DIR/deps/common/bash-color.sh && \
     rm -rf $BUILD_DIR && \

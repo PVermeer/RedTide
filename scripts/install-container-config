@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source "$(dirname "${BASH_SOURCE[0]}")/deps/common/env.sh"
+
+target_keys_dir="/usr/etc/pki/containers"
+target_policy_dir="/usr/etc/containers"
+target_registries_dir="${target_policy_dir}/registries.d"
+target_redtide_registry_config_file="${target_registries_dir}/redtide.yaml"
+target_containers_policy_file="${target_policy_dir}/policy.json"
+target_primary_key="${target_keys_dir}/redtide-primary.pub"
+target_secondary_key="${target_keys_dir}/redtide-secondary.pub"
+
+source_key_dir=$KEYS_DIR
+source_primary_key="${source_key_dir}/cosign-redtide-primary.pub"
+source_secondary_key="${source_key_dir}/cosign-redtide-secondary.pub"
+
+source_policies_dir=$POLICIES_DIR
+source_redtide_registry_config="${source_policies_dir}/redtide-registry-config.yml"
+source_containers_policy_source="${source_policies_dir}/containers.json"
+
+require_file() {
+    if [[ ! -f "$1" ]]; then
+        echo_error "Required file not found: $1"
+        exit 1
+    fi
+}
+
+echo_color "\n==== Installing signing keys ===="
+
+require_file "$source_primary_key"
+require_file "$source_secondary_key"
+require_file "$source_redtide_registry_config"
+require_file "$source_containers_policy_source"
+
+install -d -m 0755 "$target_keys_dir"
+install -d -m 0755 "$target_policy_dir"
+install -d -m 0755 "$target_registries_dir"
+
+echo_color "Installing keys"
+
+install -m 0644 "$source_primary_key" "$target_primary_key"
+install -m 0644 "$source_secondary_key" "$target_secondary_key"
+
+restorecon -RF "$target_keys_dir" 2>/dev/null || true
+
+echo "${target_primary_key}:"
+cat "$target_primary_key"
+echo "${target_secondary_key}:"
+cat "$target_secondary_key"
+
+echo_color "Configuring RedTide registry"
+
+install -m 0644 "$source_redtide_registry_config" "$target_redtide_registry_config_file"
+restorecon -v "$target_redtide_registry_config_file" 2>/dev/null || true
+echo "${target_redtide_registry_config_file}:"
+cat "$target_redtide_registry_config_file"
+
+echo_color "Configuring container signature policy"
+
+install -m 0644 "$source_containers_policy_source" "$target_containers_policy_file"
+restorecon -v "$target_containers_policy_file" 2>/dev/null || true
+
+echo "${target_containers_policy_file}:"
+cat "$target_containers_policy_file"
+echo ""
+
+echo_color "Committing changes to container"
+ostree container commit
+
+echo_success "Signing keys and policy installed successfully"

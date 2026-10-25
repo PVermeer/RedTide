@@ -1,0 +1,3 @@
+docker:
+  ghcr.io/pvermeer/redtide:
+    use-sigstore-attachments: true

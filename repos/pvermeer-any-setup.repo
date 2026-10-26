@@ -1,0 +1,10 @@
+[copr:copr.fedorainfracloud.org:pvermeer:any-setup]
+name=Copr repo for any-setup owned by pvermeer
+baseurl=https://download.copr.fedorainfracloud.org/results/pvermeer/any-setup/fedora-$releasever-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-pvermeer-any-setup
+repo_gpgcheck=0
+enabled=0
+enabled_metadata=1

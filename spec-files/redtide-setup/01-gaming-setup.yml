@@ -1,0 +1,23 @@
+page_type: settings
+section: Gaming
+title: Services
+icon: applications-engineering-symbolic
+groups:
+  - title: Enable some cool services
+    settings:
+      - type: switch
+        title: Enable Sunshine
+        subtitle: Sunshine game streaming starts after login
+        actions:
+          - action: systemd
+            type: enable
+            scope: user
+            unit: sunshine.service
+
+      - type: switch
+        title: Enable gamemode
+        subtitle: Add current user to the gamemode group to enable more features
+        actions:
+          - action: usergroup
+            type: add
+            group: gamemode

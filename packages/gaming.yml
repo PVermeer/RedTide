@@ -12,13 +12,21 @@
 
 - repo: terra
   repo_file: terra.repo
-  install:
-    - gamescope-session-steam
   kmods:
     - akmod: xonedo
       package: akmod-xonedo
     - akmod: xpadneo
       package: akmod-xpadneo
+
+- repo: copr:copr.fedorainfracloud.org:pvermeer:gamescope-session-steam
+  repo_file: pvermeer-gamescope-session-steam.repo
+  install:
+    - gamescope-session-steam
+
+- repo: copr:copr.fedorainfracloud.org:pvermeer:steam-steamos
+  repo_file: pvermeer-steam-steamos.repo
+  install:
+    - steam-steamos
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
   repo_file: pvermeer-sunshine.repo
@@ -29,8 +37,3 @@
   repo_file: pvermeer-virtual-display.repo
   install:
     - virtual-display
-
-- repo: copr:copr.fedorainfracloud.org:pvermeer:steam-steamos
-  repo_file: pvermeer-steam-steamos.repo
-  install:
-    - steam-steamos

@@ -1,0 +1,8 @@
+- repo: copr:copr.fedorainfracloud.org:pvermeer:any-setup
+  repo_file: pvermeer-any-setup.repo
+  install:
+    - any-setup
+
+- repo: local
+  install:
+    - redtide-setup

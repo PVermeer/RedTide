@@ -1,0 +1,9 @@
+page_type: content
+title: Home
+icon: go-home-symbolic
+header:
+  icon: org.pvermeer.AnySetup
+  text: RedTide Setup
+contents:
+  - text: With this utility you can setup RedTide with some simple settings.
+    align: center

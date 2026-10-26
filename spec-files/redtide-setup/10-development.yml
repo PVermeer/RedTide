@@ -1,0 +1,18 @@
+page_type: settings
+title: Containers
+section: Development
+icon: terminal-distrobox-icon
+groups:
+  - settings:
+      - type: switch
+        title: Enable docker (root)
+        subtitle: Enable docker and run docker commands without sudo
+        actions:
+          - action: systemd
+            type: enable
+            scope: system
+            unit: docker.socket
+
+          - action: usergroup
+            type: add
+            group: docker

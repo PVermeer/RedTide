@@ -43,6 +43,14 @@
           keys:
             - key: style-components
               value: 3
+        - schema: org/gnome/shell/extensions/blur-my-shell/dash-to-dock
+          keys:
+            - key: style-dash-to-dock
+              value: 0
+        - schema: org/gnome/shell/extensions/blur-my-shell/popup
+          keys:
+            - key: blur
+              value: false
 
     - id: just-perfection-desktop@just-perfection
       package: gnome-shell-extension-just-perfection

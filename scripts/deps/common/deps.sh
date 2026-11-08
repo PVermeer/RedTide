@@ -29,7 +29,7 @@ fi
 # Alias the follwing commands so they will exit in a subshell $(command) on errors.
 
 jq() {
-	command yq "$@" || {
+	command jq "$@" || {
 		echo_error "yq command failed: $*"
 		exit 1
 	}

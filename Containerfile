@@ -66,12 +66,12 @@ ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
 ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
 ENV PATH=${PATH}:${SCRIPTS_DIR}
 
+COPY --from=builds ${KEYS_DIR} ${KEYS_DIR}
 COPY ./scripts/deps/common $SCRIPTS_DIR/deps/common
 RUN source ./$SCRIPTS_DIR/deps/common/env.sh
 
 COPY --from=builds $LOCAL_RPM_DIR $LOCAL_RPM_DIR
 COPY --from=builds $KMODS_RPM_DIR $KMODS_RPM_DIR
-COPY --from=builds ${KEYS_DIR}/RPM-GPG-KEY-local_kmod ${KEYS_DIR}/RPM-GPG-KEY-local_kmod 
 COPY ./scripts/deps $SCRIPTS_DIR/deps
 COPY ./scripts/install-packages $SCRIPTS_DIR/install-packages
 COPY ./repos $REPOS_DIR
@@ -100,26 +100,26 @@ COPY ./packages/development.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages development.yml
 
-# COPY ./packages/gnome.yml ${PACKAGES_DIR}/
-# RUN --mount=type=cache,dst=/var/cache \
-#     install-packages gnome.yml
+COPY ./packages/gnome.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages gnome.yml
 
-# COPY ./packages/tools.yml ${PACKAGES_DIR}/
-# RUN --mount=type=cache,dst=/var/cache \
-#     install-packages tools.yml
+COPY ./packages/tools.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages tools.yml
 
-# COPY ./packages/utilities.yml ${PACKAGES_DIR}/
-# RUN --mount=type=cache,dst=/var/cache \
-#     install-packages utilities.yml
+COPY ./packages/utilities.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages utilities.yml
 
-# COPY ./packages/vm.yml ${PACKAGES_DIR}/
-# RUN --mount=type=cache,dst=/var/cache \
-#     install-packages vm.yml
+COPY ./packages/vm.yml ${PACKAGES_DIR}/
+RUN --mount=type=cache,dst=/var/cache \
+    install-packages vm.yml
 
-# COPY ./policies ${POLICIES_DIR}/
-# COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
-# RUN --mount=type=cache,dst=/var/cache \
-#     install-container-config
+COPY ./policies ${POLICIES_DIR}/
+COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
+RUN --mount=type=cache,dst=/var/cache \
+    install-container-config
 
 COPY ./packages/redtide.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \

@@ -50,3 +50,46 @@ DISTRO_NAME="RedTide"
 FEDORA_VERSION="$(rpm -E %fedora)"
 
 echo_color "FEDORA_VERSION=$FEDORA_VERSION"
+
+# Local RPM GPG key signing
+mkdir -p "${KEYS_DIR}"
+
+export RPM_LOCAL_SIGN_KEY="local_rpm"
+export RPM_LOCAL_SIGN_KEY_FILE_PUBLIC="RPM-GPG-KEY-${RPM_LOCAL_SIGN_KEY}"
+public_rpm_signing_key_path="${KEYS_DIR}/${RPM_LOCAL_SIGN_KEY_FILE_PUBLIC}"
+
+if [ ! -s "$public_rpm_signing_key_path" ] &&
+	! command -v rpm-ostree >/dev/null 2>&1; then
+
+	echo_color "Setting gnupg config"
+	# Set empty config, in particular to remove `use-keyboxd`. Some idiot designed gpg/keybox with
+	# a bunch of extra deps / services needed + a locking database... which is all a massive PITA.
+	mkdir -p "${HOME}/.gnupg"
+	chmod 700 "${HOME}/.gnupg"
+	echo "" >"${HOME}/.gnupg/common.conf"
+	chmod 600 "${HOME}/.gnupg/common.conf"
+
+	if ! gpg --batch --list-secret-keys $RPM_LOCAL_SIGN_KEY; then
+		echo_color "Creating temporary rpm signing key"
+
+		gpg --batch --passphrase '' \
+			--quick-generate-key \
+			"$RPM_LOCAL_SIGN_KEY" rsa4096 sign 0
+
+		echo "Exporting public key to $public_rpm_signing_key_path"
+
+		gpg --batch --armor --export $RPM_LOCAL_SIGN_KEY >"$public_rpm_signing_key_path"
+
+		if [ ! -s "${KEYS_DIR}/$RPM_LOCAL_SIGN_KEY_FILE_PUBLIC" ]; then
+			echo_error "Failed to export rpm signing public key"
+			exit 1
+		fi
+	fi
+elif [ -s "$public_rpm_signing_key_path" ]; then
+	echo_color "Importing rpm signing public key"
+
+	rpm --import "$public_rpm_signing_key_path"
+else
+	echo_error "Failed to manage local rpm signing key"
+	exit 1
+fi

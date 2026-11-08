@@ -5,23 +5,8 @@ set -o pipefail
 
 kernel_version=$1
 destination=$2
-sign_key_name="local_kmod"
-public_key_file="${KEYS_DIR}/RPM-GPG-KEY-${sign_key_name}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/deps/repo.sh"
-
-echo_color "Creating temporary kmod signing key"
-gpg --batch --passphrase '' \
-    --quick-generate-key \
-    "$sign_key_name" rsa4096 sign 0
-
-echo "Exporting public key to $public_key_file"
-gpg --armor --export $sign_key_name >"$public_key_file"
-
-if [ ! -s "$public_key_file" ]; then
-    echo_error "Failed to export kmod signing public key"
-    exit 1
-fi
 
 for package_config in "$PACKAGES_DIR"/*.yml; do
     echo_color "Checking for kmod packages in $package_config"
@@ -97,7 +82,7 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
             echo_color "Signing kmod package $package_config: '$name'"
 
             for rpm in /var/cache/akmods/*/*.rpm; do
-                rpmsign --addsign --key-id $sign_key_name "$rpm"
+                rpmsign --addsign --key-id "$RPM_LOCAL_SIGN_KEY" "$rpm"
             done
 
             mkdir -p "${destination}/${name}"

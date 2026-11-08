@@ -15,9 +15,6 @@ if [ ! -f "$package_config" ]; then
 	exit 1
 fi
 
-echo_color "Importing kmod signing key"
-rpm --import "${KEYS_DIR}/RPM-GPG-KEY-local_kmod"
-
 echo_color "\n==== Installing $yml_file ===="
 
 config=$(envsubst <"$package_config")

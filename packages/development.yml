@@ -31,7 +31,6 @@
     - rust
     - rustup
     - shellcheck
-    # - shfmt
     - yq
 
 - repo: code

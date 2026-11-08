@@ -3,5 +3,5 @@ name=Docker CE Stable - $basearch
 baseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable
 enabled=0
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-docker-ce
+gpgkey=file:///usr/etc/pki/rpm-gpg/redtide/RPM-GPG-KEY-docker-ce
 skip_if_unavailable=False

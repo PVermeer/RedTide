@@ -1,4 +1,4 @@
-ARG FEDORA_MAJOR_VERSION=44
+ARG FEDORA_MAJOR_VERSION=45
 ARG SILVERBLUE_IMAGE_SOURCE=quay.io/fedora/fedora-silverblue
 ARG SILVERBLUE_POINT_RELEASE=""
 
@@ -25,10 +25,13 @@ ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
 ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
 ENV PATH=${PATH}:${SCRIPTS_DIR}
 
+COPY ./scripts/deps/common $SCRIPTS_DIR/deps/common
+RUN source ./$SCRIPTS_DIR/deps/common/env.sh
+
 # Akmods
 COPY --from=silverblue /tmp/environment ${ENV_FILE}
-COPY --from=silverblue /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo \
-    /etc/yum.repos.d/rpmfusion-nonfree-nvidia-driver.repo
+COPY --from=silverblue /usr/share/dnf5/repos.d/rpmfusion-nonfree-nvidia-driver.repo \
+    /usr/share/dnf5/repos.d/rpmfusion-nonfree-nvidia-driver.repo
 COPY --from=silverblue /usr/share/distribution-gpg-keys/rpmfusion \
     /usr/share/distribution-gpg-keys/rpmfusion
 
@@ -36,7 +39,6 @@ RUN source $ENV_FILE && dnf -y --setopt=install_weak_deps=False install \
     "kernel-core-$KERNEL_VERSION" \
     "kernel-devel-$KERNEL_VERSION"
 
-COPY ./scripts/deps/common $SCRIPTS_DIR/deps/common
 COPY ./scripts/deps/repo.sh $SCRIPTS_DIR/deps/repo.sh
 COPY ./scripts/build-akmods $SCRIPTS_DIR/build-akmods
 COPY ./repos $REPOS_DIR
@@ -64,8 +66,12 @@ ENV RPM_BUILD_DIR=${BUILD_DIR}/rpm-builds
 ENV LOCAL_RPM_DIR=${RPM_BUILD_DIR}/rpms
 ENV PATH=${PATH}:${SCRIPTS_DIR}
 
+COPY ./scripts/deps/common $SCRIPTS_DIR/deps/common
+RUN source ./$SCRIPTS_DIR/deps/common/env.sh
+
 COPY --from=builds $LOCAL_RPM_DIR $LOCAL_RPM_DIR
 COPY --from=builds $KMODS_RPM_DIR $KMODS_RPM_DIR
+COPY --from=builds ${KEYS_DIR}/RPM-GPG-KEY-local_kmod ${KEYS_DIR}/RPM-GPG-KEY-local_kmod 
 COPY ./scripts/deps $SCRIPTS_DIR/deps
 COPY ./scripts/install-packages $SCRIPTS_DIR/install-packages
 COPY ./repos $REPOS_DIR
@@ -94,26 +100,26 @@ COPY ./packages/development.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages development.yml
 
-COPY ./packages/gnome.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages gnome.yml
+# COPY ./packages/gnome.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages gnome.yml
 
-COPY ./packages/tools.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages tools.yml
+# COPY ./packages/tools.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages tools.yml
 
-COPY ./packages/utilities.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages utilities.yml
+# COPY ./packages/utilities.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages utilities.yml
 
-COPY ./packages/vm.yml ${PACKAGES_DIR}/
-RUN --mount=type=cache,dst=/var/cache \
-    install-packages vm.yml
+# COPY ./packages/vm.yml ${PACKAGES_DIR}/
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-packages vm.yml
 
-COPY ./policies ${POLICIES_DIR}/
-COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
-RUN --mount=type=cache,dst=/var/cache \
-    install-container-config
+# COPY ./policies ${POLICIES_DIR}/
+# COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
+# RUN --mount=type=cache,dst=/var/cache \
+#     install-container-config
 
 COPY ./packages/redtide.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \

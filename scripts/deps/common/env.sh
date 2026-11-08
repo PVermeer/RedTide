@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 set -o pipefail
+shopt -s inherit_errexit
 
 source "$(dirname "${BASH_SOURCE[0]}")/bash-color.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/deps.sh"

@@ -15,25 +15,48 @@ if [ ! -f "$package_config" ]; then
 	exit 1
 fi
 
+echo_color "Importing kmod signing key"
+rpm --import "${KEYS_DIR}/RPM-GPG-KEY-local_kmod"
+
 echo_color "\n==== Installing $yml_file ===="
 
-mapfile -t repos < <(yq -o=j -I=0 '.[]' "$package_config")
+config=$(envsubst <"$package_config")
+mapfile -t repos < <(yq -o=j -I=0 '.[]' <<<"$config")
+
+if [ ${#repos[@]} -eq 0 ]; then
+	echo_error "Failed to parse package configuration or configuration is empty"
+	exit 1
+fi
+
 for repo_packages in "${repos[@]}"; do
-	# repo is a single json snippet
-	repo=$(yq '.repo' <<<"$repo_packages")
-	repo_file=$(yq '.repo_file' <<<"$repo_packages")
+	# Support both String and Array type for repo names and files
+	if [ "$(yq -r '.repo | tag' <<<"$repo_packages")" = "!!seq" ]; then
+		mapfile -t repos < <(yq -r '.repo[]' <<<"$repo_packages")
+	else
+		mapfile -t repos < <(yq -r '.repo' <<<"$repo_packages")
+	fi
+
+	if [ "$(yq -r '.repo_file | tag' <<<"$repo_packages")" = "!!seq" ]; then
+		mapfile -t repo_files < <(yq -r '.repo_file[]' <<<"$repo_packages")
+	else
+		# shellcheck disable=SC2034
+		mapfile -t repo_files < <(yq -r '.repo_file' <<<"$repo_packages")
+	fi
+
 	disable_repo=$(yq '.disable_repo' <<<"$repo_packages")
 	pre_install_command=$(yq '.pre_install_command' <<<"$repo_packages")
 	post_install_command=$(yq '.post_install_command' <<<"$repo_packages")
-	mapfile -t packages_install < <(yq '.install[]' <<<"$repo_packages" | envsubst)
-	mapfile -t packages_remove < <(yq '.remove[]' <<<"$repo_packages" | envsubst)
-	mapfile -t packages_extensions < <(yq '.extensions[]' <<<"$repo_packages" | envsubst)
+	mapfile -t packages_install < <(yq '.install[]' <<<"$repo_packages")
+	mapfile -t packages_remove < <(yq '.remove[]' <<<"$repo_packages")
+	mapfile -t packages_extensions < <(yq '.extensions[]' <<<"$repo_packages")
 	mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
 	mapfile -t dconf_configs < <(yq '.dconf[]' <<<"$repo_packages")
 
+	enable_repos repo_files repos
+
 	# Kmods
 	if [ -n "${kmod_names[*]}" ]; then
-		echo_color "Installing kmods for $yml_file: '$repo'"
+		echo_color "Installing kmods for $yml_file: '${repos[*]}'"
 
 		for name in "${kmod_names[@]}"; do
 			for rpm_package in "${KMODS_RPM_DIR}"/"${name}"/*.rpm; do
@@ -46,25 +69,12 @@ for repo_packages in "${repos[@]}"; do
 			exit 1
 		fi
 
-		if [ "$repo" = "fedora" ]; then
-			rpm-ostree install "${kmod_packages_paths[@]}"
-
-		elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-			enable_repo "$repo_file" "$repo"
-			rpm-ostree install "${kmod_packages_paths[@]}"
-			[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
-
-		else
-			enable_repo_extern "$repo_file" "$repo"
-			rpm-ostree install "${kmod_packages_paths[@]}"
-			[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
-		fi
-
+		rpm-ostree install "${kmod_packages_paths[@]}"
 	fi
 
 	# Extensions
 	if [ -n "${packages_extensions[*]}" ]; then
-		echo_color "Installing extensions for $yml_file: '$repo'"
+		echo_color "Installing extensions for $yml_file: '${repos[*]}'"
 
 		for extension in "${packages_extensions[@]}"; do
 			packages_install+=("$(yq '.package' <<<"$extension")")
@@ -81,49 +91,34 @@ for repo_packages in "${repos[@]}"; do
 		[ -z "${packages_remove[*]}" ] &&
 		[ -z "${kmod_names[*]}" ] &&
 		[ -z "${dconf[*]}" ]; then
-		echo_error "No packages / config defined for $yml_file: '$repo'"
+		echo_error "No packages / config defined for $yml_file: '${repos[*]}'"
 		exit 1
 	fi
 
 	# Pre install
 	if [ ! "$pre_install_command" = "null" ]; then
-		echo_color "Running pre install command for $yml_file: '$repo'"
+		echo_color "Running pre install command for $yml_file: '${repos[*]}'"
 		echo "$pre_install_command"
 		eval "$pre_install_command"
 	fi
 
 	# Packages - replace
 	if [ -n "${packages_remove[*]}" ] && [ -n "${packages_install[*]}" ]; then
-		echo_color "Replacing packages for $yml_file: '$repo'"
+		echo_color "Replacing packages for $yml_file: '${repos[*]}'"
 
-		if [ "$repo" = "fedora" ]; then
-			rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-
-		elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-			enable_repo "$repo_file" "$repo"
-			rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-			[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
-
-		else
-			enable_repo_extern "$repo_file" "$repo"
-			rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
-			[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
-		fi
+		rpm-ostree override remove "${packages_remove[@]}" --install "${packages_install[@]}"
 	else
 		# Packages - remove
 		if [ -n "${packages_remove[*]}" ]; then
-			echo_color "Removing packages for $yml_file: '$repo'"
+			echo_color "Removing packages for $yml_file: '${repos[*]}'"
 			rpm-ostree override remove "${packages_remove[@]}"
 		fi
 
 		# Packages - install
 		if [ -n "${packages_install[*]}" ]; then
-			echo_color "Installing packages for $yml_file: '$repo'"
+			echo_color "Installing packages for $yml_file: '${repos[*]}'"
 
-			if [ "$repo" = "fedora" ]; then
-				rpm-ostree install "${packages_install[@]}"
-
-			elif [ "$repo" = "local" ]; then
+			if [ "${repos[0]}" = "local" ]; then
 				local_rpms=()
 				for package_name in "${packages_install[@]}"; do
 					file=$(find "$LOCAL_RPM_DIR" -type f -name "${package_name}*.rpm" -print -quit)
@@ -135,19 +130,13 @@ for repo_packages in "${repos[@]}"; do
 				done
 
 				rpm-ostree install "${local_rpms[@]}"
-
-			elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-				enable_repo "$repo_file" "$repo"
-				rpm-ostree install "${packages_install[@]}"
-				[ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
-
 			else
-				enable_repo_extern "$repo_file" "$repo"
 				rpm-ostree install "${packages_install[@]}"
-				[ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
 			fi
 		fi
 	fi
+
+	[ "$disable_repo" = "false" ] || disable_repos repo_files repos
 
 	# Extension config
 	if [ -n "${packages_extensions[*]}" ]; then
@@ -162,7 +151,7 @@ for repo_packages in "${repos[@]}"; do
 
 	# Post install
 	if [ ! "$post_install_command" = "null" ]; then
-		echo_color "Running post install command for $yml_file: '$repo'"
+		echo_color "Running post install command for $yml_file: '${repos[*]}'"
 		echo "$post_install_command"
 		eval "$post_install_command"
 	fi

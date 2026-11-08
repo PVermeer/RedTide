@@ -5,47 +5,75 @@ set -o pipefail
 
 kernel_version=$1
 destination=$2
+sign_key_name="local_kmod"
+public_key_file="${KEYS_DIR}/RPM-GPG-KEY-${sign_key_name}"
 
 source "$(dirname "${BASH_SOURCE[0]}")/deps/repo.sh"
+
+echo_color "Creating temporary kmod signing key"
+gpg --batch --passphrase '' \
+    --quick-generate-key \
+    "$sign_key_name" rsa4096 sign 0
+
+echo "Exporting public key to $public_key_file"
+gpg --armor --export $sign_key_name >"$public_key_file"
+
+if [ ! -s "$public_key_file" ]; then
+    echo_error "Failed to export kmod signing public key"
+    exit 1
+fi
 
 for package_config in "$PACKAGES_DIR"/*.yml; do
     echo_color "Checking for kmod packages in $package_config"
 
-    mapfile -t repos < <(yq -o=json -I=0 '.[]' "$package_config")
+    config=$(envsubst <"$package_config")
+    mapfile -t repos < <(yq -o=json -I=0 '.[]' <<<"$config")
+
+    if [ ${#repos[@]} -eq 0 ]; then
+        echo_error "Failed to parse package configuration or configuration is empty"
+        exit 1
+    fi
 
     for repo_packages in "${repos[@]}"; do
-        # repo_packages is a single JSON snippet
-        repo=$(yq '.repo' <<<"$repo_packages")
-        repo_file=$(yq '.repo_file' <<<"$repo_packages")
+        # Support both String and Array type for repo names and files
+        if [ "$(yq -r '.repo | tag' <<<"$repo_packages")" = "!!seq" ]; then
+            mapfile -t repos < <(yq -r '.repo[]' <<<"$repo_packages")
+        else
+            mapfile -t repos < <(yq -r '.repo' <<<"$repo_packages")
+        fi
+
+        if [ "$(yq -r '.repo_file | tag' <<<"$repo_packages")" = "!!seq" ]; then
+            mapfile -t repo_files < <(yq -r '.repo_file[]' <<<"$repo_packages")
+        else
+            # shellcheck disable=SC2034
+            mapfile -t repo_files < <(yq -r '.repo_file' <<<"$repo_packages")
+        fi
+
         disable_repo=$(yq '.disable_repo' <<<"$repo_packages")
         mapfile -t kmod_packages < <(yq -r '.kmods[].package' <<<"$repo_packages")
         mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
 
         if [ -n "${kmod_packages[*]}" ]; then
-            echo_color "Installing kmod packages for $package_config: '$repo'"
 
-            if [ "$repo" = "fedora" ]; then
-                dnf -y install "${kmod_packages[@]}"
+            echo_color "Installing kmod packages for $package_config: '${repos[*]}'"
 
-            elif [ ! -f "${REPOS_DIR}/${repo_file}" ]; then
-                enable_repo "$repo_file" "$repo"
-                dnf -y install "${kmod_packages[@]}"
-                [ "$disable_repo" = "false" ] || disable_repo "$repo_file" "$repo"
-
-            else
-                enable_repo_extern "$repo_file" "$repo"
-                dnf -y install "${kmod_packages[@]}"
-                [ "$disable_repo" = "false" ] || disable_repo_extern "$repo_file" "$repo"
-            fi
+            enable_repos repo_files repos
+            dnf -y install "${kmod_packages[@]}"
+            [ "$disable_repo" = "false" ] || disable_repos repo_files repos
 
             echo_color "Killing potential akmod background builds from post scripts"
 
             echo "Akmods processes:"
-            pgrep -l -x akmods || echo "Nothing found"
-            echo_warning "Killing akmods builds"
-            sudo pkill -x akmods || echo "Nothing found"
-            echo "Akmods processes:"
-            pgrep -l -x akmods || echo "Nothing found"
+            if pgrep -l -x akmods; then
+                echo_warning "Killing akmods builds"
+                sudo pkill -x akmods
+
+                echo "Akmods processes:"
+                pgrep -l -x akmods || echo "Nothing found"
+
+            else
+                echo "Nothing found"
+            fi
         fi
 
         for name in "${kmod_names[@]}"; do
@@ -65,6 +93,12 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
                 done
                 exit 1
             fi
+
+            echo_color "Signing kmod package $package_config: '$name'"
+
+            for rpm in /var/cache/akmods/*/*.rpm; do
+                rpmsign --addsign --key-id $sign_key_name "$rpm"
+            done
 
             mkdir -p "${destination}/${name}"
             mv /var/cache/akmods/*/*.rpm "${destination}/${name}/"

@@ -56,7 +56,7 @@ enable_repo_extern() {
     local repo_key_file_source="${KEYS_DIR}/${repo_key}"
     local repo_key_file_destination="${repo_key_dir}/${repo_key}"
 
-    echo_color "Installing external repo '$repo_name' in $repo_file_source"
+    echo_color "Installing external repo '$repo_name' in $repo_file_destination"
 
     if [ ! -f "$repo_file_source" ]; then
         echo_error "Repo source file for '$repo_name' not found: $repo_file_source"

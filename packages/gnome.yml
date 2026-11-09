@@ -20,6 +20,12 @@
       package: gnome-shell-extension-appindicator
       enable: true
 
+    - id: just-perfection-desktop@just-perfection
+      package: gnome-shell-extension-just-perfection
+      enable: false
+
+- repo: local
+  extensions:
     - id: caffeine@patapon.info
       package: gnome-shell-extension-caffeine
       enable: true
@@ -51,10 +57,3 @@
           keys:
             - key: blur
               value: false
-
-    - id: just-perfection-desktop@just-perfection
-      package: gnome-shell-extension-just-perfection
-      enable: false
-
-    - id: screen-rotate@shyzus.github.io
-      package: gnome-shell-extension-screen-autorotate

@@ -47,7 +47,7 @@ COPY ./packages $PACKAGES_DIR
 RUN source $ENV_FILE && build-akmods $KERNEL_VERSION $KMODS_RPM_DIR
 
 # RPM specs
-RUN dnf install -y rpmdevtools rpmlint systemd-rpm-macros
+RUN dnf install -y rpmdevtools rpmlint systemd-rpm-macros glib2 gettext
 COPY ./scripts/build-rpms $SCRIPTS_DIR
 
 COPY ./spec-files $RPM_BUILD_DIR/spec-files

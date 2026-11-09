@@ -57,3 +57,14 @@
           keys:
             - key: blur
               value: false
+
+    - id: hotedge@jonathan.jdoda.ca
+      package: gnome-shell-extension-hotedge
+      enable: true
+      dconf:
+        - schema: org/gnome/shell/extensions/hotedge
+          keys:
+            - key: show-animation
+              value: false
+            - key: suppress-activation-when-fullscreen
+              value: false

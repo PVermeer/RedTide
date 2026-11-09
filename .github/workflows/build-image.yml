@@ -144,7 +144,7 @@ jobs:
               "${IMAGE}:latest"
           fi
 
-      - name: Create Git release tag
+      - name: Create git release tag
         run: |
           OLD_TAGS="$(
             git tag --points-at "${COMMIT}" --list "${{ inputs.channel }}-*"

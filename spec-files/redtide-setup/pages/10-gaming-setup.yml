@@ -1,0 +1,54 @@
+page_type: settings
+section: Gaming
+title: Setup
+icon: applications-engineering-symbolic
+groups:
+  - title: Performance
+    settings:
+      - type: switch
+        title: Enable gamemode
+        subtitle: Add current user to the gamemode group to enable more features
+        actions:
+          - action: usergroup
+            type: add
+            group: gamemode
+
+      - type: switch
+        title: Enable AMD gpu overclock features
+        subtitle: Set AMD kernel driver to allow gpu overclocks
+        actions:
+          - action: rpmostree
+            type: kargs
+            add:
+              - amdgpu.ppfeaturemask=0xFFF7FFFF
+
+  - title: Game streaming
+    description: Sunshine -> Moonlight game streaming setup
+    link:
+      title: More info
+      url: https://docs.lizardbyte.dev/projects/sunshine/latest
+    settings:
+      - type: switch
+        title: Enable Sunshine
+        subtitle: Sunshine / Moonlight game streaming host & client
+        actions:
+          - action: systemd
+            type: enable
+            scope: user
+            unit: sunshine.service
+
+      - type: switch
+        title: Install Moonlight
+        subtitle: Stream games and other applications from another PC running Sunshine
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: com.moonlight_stream.Moonlight
+
+      - type: switch
+        title: Enable wake-on-lan
+        subtitle: Wake PC from Moonlight client
+        actions:
+          - action: symlink
+            udev: 81-wol.rules

@@ -1,0 +1,81 @@
+page_type: settings
+title: Apps
+icon: preferences-desktop-apps-symbolic
+groups:
+  - title: Highly recommended apps
+    settings:
+      - type: switch
+        title: Firefox (Flathub)
+        subtitle: Replaces the stock one with faster security updates.
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: org.mozilla.firefox
+
+  - title: Gnome utilities
+    settings:
+      - type: switch
+        title: Bazaar
+        subtitle: Discover and install apps (a better app store)
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: io.github.kolunmi.Bazaar
+
+      - type: switch
+        title: Extension Manager
+        subtitle: Browse and install GNOME Shell extensions to customise your desktop
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: com.mattjakeman.ExtensionManager
+
+      - type: switch
+        title: Gear Lever
+        subtitle: Manage AppImages (alternative app format)
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: it.mijorus.gearlever
+
+      - type: switch
+        title: Web App Hub
+        subtitle: Create web apps with ease
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: org.pvermeer.WebAppHub
+
+      - type: switch
+        title: Bottles
+        subtitle: Run Windows software
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: com.usebottles.bottles
+
+      - type: switch
+        title: Ignition
+        subtitle: Manage startup apps and scripts
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: io.github.flattool.Ignition
+
+  - title: Cloud services
+    settings:
+      - type: switch
+        title: Nextcloud
+        subtitle: Install Nextcloud with Files integration
+        actions:
+          - action: rpmostree
+            type: install
+            packages:
+              - nextcloud-client

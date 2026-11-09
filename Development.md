@@ -3,7 +3,8 @@
 ## Prepare config
 On host and VM
 ```sh
-sudo nano /etc/containers/registries.conf
+sudo mkdir -p /etc/containers/registries.conf.d
+sudo nano /etc/containers/registries.conf.d/redtide-local.conf
 ```
 Add
 ```toml
@@ -21,7 +22,7 @@ ip route | grep default | awk '{print $3}'
 ### Run local registery for rebase / update
 ```sh
 podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/li
-brary/registry:2
+brary/registry:latest
 ```
 
 Or start if already installed

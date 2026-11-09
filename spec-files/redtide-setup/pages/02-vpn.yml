@@ -1,0 +1,53 @@
+page_type: settings
+title: Vpn
+icon: network-wired-symbolic
+groups:
+  - title: Mullvad
+    description: Mullvad needs to be installed first. After reboot enable the VPN services.
+    link:
+      title: More info
+      url: https://mullvad.net
+    settings:
+      - type: switch
+        title: Install Mullvad
+        subtitle:
+        actions:
+          - action: symlink
+            rpmrepo: mullvad.repo
+
+          - action: rpmostree
+            type: install
+            packages:
+              - mullvad-vpn
+
+      - type: switch
+        title: Enable Mullvad services
+        actions:
+          - action: systemd
+            type: enable
+            scope: system
+            unit: mullvad-daemon.service
+
+          - action: systemd
+            type: enable
+            scope: system
+            unit: mullvad-early-boot-blocking.service
+
+  - title: Tailscale
+    description: Enable Tailscale services
+    link:
+      title: More info
+      url: https://tailscale.com
+    settings:
+      - type: switch
+        title: Enable Tailscale
+        actions:
+          - action: systemd
+            type: enable
+            scope: system
+            unit: tailscaled.service
+
+          - action: systemd
+            type: enable
+            scope: user
+            unit: tailscale-systray.service

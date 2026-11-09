@@ -18,7 +18,7 @@ env:
 
 jobs:
   check-biweekly:
-    name: Check Release Week
+    name: Check release week
     runs-on: ubuntu-latest
     outputs:
       should_release: ${{ steps.check.outputs.should_release }}
@@ -44,7 +44,7 @@ jobs:
           fi
 
   merge-stable:
-    name: Merge Beta Image Commit into Stable
+    name: Merge beta image commit into stable
     needs: check-biweekly
     if: needs.check-biweekly.outputs.should_release == 'true'
     runs-on: ubuntu-latest
@@ -104,7 +104,7 @@ jobs:
           git push origin stable
 
   promote-stable:
-    name: Promote Beta Image to Stable
+    name: Promote beta image to stable
     needs: merge-stable
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -168,7 +168,7 @@ jobs:
           git push origin "refs/tags/${RELEASE_TAG}"
 
   build-beta:
-    name: Build New Beta
+    name: Build new beta
     needs: promote-stable
     permissions:
       contents: write

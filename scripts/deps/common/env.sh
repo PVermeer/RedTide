@@ -25,6 +25,10 @@ if [ -z "$KEYS_DIR" ]; then
 	echo_error "KEYS_DIR not defined in Containerfile"
 	exit 1
 fi
+if [ -z "$POLICIES_DIR" ]; then
+	echo_error "POLICIES_DIR not defined in Containerfile"
+	exit 1
+fi
 if [ -z "$KMODS_RPM_DIR" ]; then
 	echo_error "KMODS_RPM_DIR not defined in Containerfile"
 	exit 1

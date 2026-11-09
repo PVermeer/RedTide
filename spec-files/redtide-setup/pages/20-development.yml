@@ -1,0 +1,39 @@
+page_type: settings
+title: Containers
+section: Development
+icon: terminal-distrobox-icon
+groups:
+  - title: Services
+    settings:
+      - type: switch
+        title: Enable docker (root)
+        subtitle: Enable docker and run docker commands without sudo
+        actions:
+          - action: systemd
+            type: enable
+            scope: system
+            unit: docker.socket
+
+          - action: usergroup
+            type: add
+            group: docker
+
+      - type: switch
+        title: Enable keybox
+        subtitle: Share user gpg keys with docker (dev)containers. Container rebuild is needed.
+        actions:
+          - action: systemd
+            type: enable
+            scope: user
+            unit: keyboxd.socket
+
+  - title: Apps & Tools
+    settings:
+      - type: switch
+        title: DistroShelf
+        subtitle: Graphical interface for managing Distrobox containers
+        actions:
+          - action: flatpak
+            type: install
+            repo: flathub
+            app: com.ranfdev.DistroShelf

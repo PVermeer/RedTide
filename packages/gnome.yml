@@ -68,3 +68,7 @@
               value: false
             - key: suppress-activation-when-fullscreen
               value: false
+
+    - id: wireless-hid@chlumskyvaclav.gmail.com
+      package: gnome-shell-extension-wireless-hid
+      enable: true

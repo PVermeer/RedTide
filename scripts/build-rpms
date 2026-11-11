@@ -24,6 +24,9 @@ print_rpm_files() {
 
 for spec_file in "$rpm_spec_dir"/*.spec; do
 
+    echo ""
+    echo_color "Build RPM: $spec_file"
+
     mkdir -p "${LOCAL_RPM_DIR}"
 
     echo "$rpm_spec_dir"

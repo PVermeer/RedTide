@@ -1,5 +1,11 @@
-- repo: rpmfusion-nonfree-steam
-  repo_file: rpmfusion-nonfree-steam.repo
+- repo:
+    - rpmfusion-free
+    - rpmfusion-free-updates
+    - rpmfusion-nonfree
+    - rpmfusion-nonfree-updates
+  repo_file:
+    - rpmfusion-free.repo
+    - rpmfusion-nonfree.repo
   install:
     - steam
     - steam-devices

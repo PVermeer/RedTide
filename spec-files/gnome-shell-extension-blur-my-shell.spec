@@ -1,5 +1,7 @@
 %global extension   blur-my-shell
 %global author      aunetx
+%global repo        https://github.com/aunetx/blur-my-shell
+%global license     GPL-3.0-or-later
 %global uuid        %{extension}@%{author}
 
 Name:           gnome-shell-extension-%{extension}
@@ -7,8 +9,8 @@ Version:        77
 Release:        1.redtide%{?dist}
 BuildArch:      noarch
 Summary:        Adds a blur look to different parts of the GNOME Shell
-License:        GPL-3.0-or-later
-URL:            https://github.com/aunetx/blur-my-shell
+License:        %{license}
+URL:            %{repo}
 
 Source:         %{extension}%{author}.v%{version}.shell-extension.zip
 

@@ -1,5 +1,7 @@
 %global extension   hotedge
 %global author      jonathan.jdoda.ca
+%global repo        https://github.com/jdoda/hotedge
+%global license     GPL-3.0-or-later
 %global uuid        %{extension}@%{author}
 
 Name:           gnome-shell-extension-%{extension}
@@ -7,8 +9,8 @@ Version:        32
 Release:        1.redtide%{?dist}
 BuildArch:      noarch
 Summary:        Add a hot edge that activates the overview to the bottom of the screen.
-License:        GPL-3.0-or-later
-URL:            https://github.com/jdoda/hotedge
+License:        %{license}
+URL:            %{repo}
 
 Source:         %{extension}%{author}.v%{version}.shell-extension.zip
 

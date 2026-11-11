@@ -1,5 +1,7 @@
 %global extension   caffeine
 %global author      patapon.info
+%global repo        https://github.com/eonpatapon/gnome-shell-extension-caffeine
+%global license     GPL-2.0-only
 %global uuid        %{extension}@%{author}
 
 Name:           gnome-shell-extension-%{extension}
@@ -7,8 +9,8 @@ Version:        61
 Release:        1.redtide%{?dist}
 BuildArch:      noarch
 Summary:        Disable the screen saver and auto suspend in gnome shell
-License:        GPL-2.0-only
-URL:            https://github.com/eonpatapon/gnome-shell-extension-caffeine
+License:        %{license}
+URL:            %{repo}
 
 Source:         %{extension}%{author}.v%{version}.shell-extension.zip
 

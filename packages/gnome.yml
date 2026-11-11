@@ -7,6 +7,7 @@
       keys:
         - key: gtk-theme
           value: adw-gtk3
+
         - key: gtk-enable-primary-paste
           value: true
 
@@ -20,10 +21,6 @@
       package: gnome-shell-extension-appindicator
       enable: true
 
-    - id: just-perfection-desktop@just-perfection
-      package: gnome-shell-extension-just-perfection
-      enable: false
-
 - repo: local
   extensions:
     - id: caffeine@patapon.info
@@ -34,6 +31,7 @@
           keys:
             - key: enable-mpris
               value: true
+
             - key: show-notifications
               value: false
 
@@ -45,18 +43,30 @@
           keys:
             - key: override-background-dynamically
               value: true
+
         - schema: org/gnome/shell/extensions/blur-my-shell/overview
           keys:
             - key: style-components
               value: 3
+
         - schema: org/gnome/shell/extensions/blur-my-shell/dash-to-dock
           keys:
             - key: style-dash-to-dock
               value: 0
+
         - schema: org/gnome/shell/extensions/blur-my-shell/popup
           keys:
             - key: blur
               value: false
+
+    - id: just-perfection-desktop@just-perfection
+      package: gnome-shell-extension-just-perfection
+      enable: true
+      dconf:
+        - schema: org/gnome/shell/extensions/just-perfection
+          keys:
+            - key: animation
+              value: 5
 
     - id: hotedge@jonathan.jdoda.ca
       package: gnome-shell-extension-hotedge
@@ -66,6 +76,7 @@
           keys:
             - key: show-animation
               value: false
+
             - key: suppress-activation-when-fullscreen
               value: false
 

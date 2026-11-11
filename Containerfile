@@ -29,13 +29,15 @@ COPY ./scripts/deps/common $SCRIPTS_DIR/deps/common
 RUN source ./$SCRIPTS_DIR/deps/common/env.sh
 
 # Akmods
+RUN dnf -y install fedora-repos-archive
+
 COPY --from=silverblue /tmp/environment ${ENV_FILE}
 COPY --from=silverblue /usr/share/dnf5/repos.d/rpmfusion-nonfree-nvidia-driver.repo \
     /usr/share/dnf5/repos.d/rpmfusion-nonfree-nvidia-driver.repo
 COPY --from=silverblue /usr/share/distribution-gpg-keys/rpmfusion \
     /usr/share/distribution-gpg-keys/rpmfusion
 
-RUN source $ENV_FILE && dnf -y --setopt=install_weak_deps=False install \
+RUN source $ENV_FILE && dnf -y --enablerepo=updates-archive --setopt=install_weak_deps=False install \
     "kernel-core-$KERNEL_VERSION" \
     "kernel-devel-$KERNEL_VERSION"
 

@@ -40,18 +40,21 @@ jobs:
 
       - name: Set release variables
         run: |
+          FEDORA_MAJOR_VERSION="$(grep -m1 '^ARG FEDORA_MAJOR_VERSION=' ./Containerfile | cut -d= -f2)"
           BUILD_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           COMMIT="$(git rev-parse HEAD)"
           RELEASE_TAG="${{ inputs.channel }}-${BUILD_TIMESTAMP}"
 
+          echo "FEDORA_MAJOR_VERSION=${FEDORA_MAJOR_VERSION}" >> "$GITHUB_ENV"
           echo "BUILD_TIMESTAMP=${BUILD_TIMESTAMP}" >> "$GITHUB_ENV"
           echo "COMMIT=${COMMIT}" >> "$GITHUB_ENV"
           echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
 
-          echo "Git ref:     ${{ inputs.ref }}"
-          echo "Git commit:  ${COMMIT}"
-          echo "Channel:     ${{ inputs.channel }}"
-          echo "Release tag: ${RELEASE_TAG}"
+          echo "Fedora version: ${FEDORA_MAJOR_VERSION}"
+          echo "Git ref:        ${{ inputs.ref }}"
+          echo "Git commit:     ${COMMIT}"
+          echo "Channel:        ${{ inputs.channel }}"
+          echo "Release tag:    ${RELEASE_TAG}"
 
       - name: Log in to GHCR
         run: |
@@ -66,8 +69,42 @@ jobs:
             -f ./Containerfile \
             --label "org.opencontainers.image.revision=${COMMIT}" \
             --label "org.opencontainers.image.created=${BUILD_TIMESTAMP}" \
-            -t "${IMAGE}:${RELEASE_TAG}" \
+            -t "${IMAGE}:build" \
             .
+
+      - name: Rechunk image
+        run: |
+          GRAPH_ROOT="$(podman info --format '{{.Store.GraphRoot}}')"
+          RUNROOT="$(podman info --format '{{.Store.RunRoot}}')"
+
+          cat > "${RUNNER_TEMP}/storage.conf" <<EOF
+          [storage]
+          driver = "overlay"
+          runroot = "${RUNROOT}"
+          graphroot = "${GRAPH_ROOT}"
+          EOF
+
+          podman run --rm \
+            --privileged \
+            --security-opt label=disable \
+            -v "$(dirname "${GRAPH_ROOT}")/$(basename "${GRAPH_ROOT}"):${GRAPH_ROOT}" \
+            -v "${RUNROOT}:${RUNROOT}" \
+            -v "${RUNNER_TEMP}/storage.conf:/etc/containers/storage.conf:ro" \
+            quay.io/fedora/fedora:"${FEDORA_MAJOR_VERSION}" \
+            bash -c "
+              set -euxo pipefail
+
+              echo 'root:100000:65536' > /etc/subuid
+              echo 'root:100000:65536' > /etc/subgid
+
+              dnf -y install rpm-ostree
+              
+              rpm-ostree compose build-chunked-oci \
+                --bootc \
+                --format-version=2 \
+                --from=${IMAGE}:build \
+                --output=containers-storage:${IMAGE}:${RELEASE_TAG}
+            "
 
       - name: Push image
         run: |

@@ -24,15 +24,9 @@
     - akmod: xpadneo
       package: akmod-xpadneo
 
-- repo: copr:copr.fedorainfracloud.org:pvermeer:gamescope-session-steam
-  repo_file: pvermeer-gamescope-session-steam.repo
+- repo: local
   install:
-    - gamescope-session-steam
-
-- repo: copr:copr.fedorainfracloud.org:pvermeer:steam-steamos
-  repo_file: pvermeer-steam-steamos.repo
-  install:
-    - steam-steamos
+    - steamos
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
   repo_file: pvermeer-sunshine.repo

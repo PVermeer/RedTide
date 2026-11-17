@@ -11,49 +11,44 @@
     ],
     "tasks": [
         {
-            "label": "Build image with podman",
+            "label": "Build image",
             "type": "shell",
-            "command": "podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "command": "./scripts/build-image.sh --no-rechunk",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
-            "label": "Build image with podman (no-cache)",
+            "label": "Build image (no-cache)",
             "type": "shell",
-            "command": "podman build --no-cache --pull -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "command": "./scripts/build-image.sh --no-rechunk --no-cache",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
-            "label": "Build a point release image with podman",
+            "label": "Build point release",
             "type": "shell",
-            "command": "podman build --pull --build-arg=SILVERBLUE_IMAGE_SOURCE=quay.io/fedora-ostree-desktops/silverblue --build-arg=SILVERBLUE_POINT_RELEASE=${input:silverblue-point-release} -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "command": "./scripts/build-image.sh --no-rechunk --point-release ${input:silverblue-point-release}",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
-            "label": "Build a point release image with podman (no-cache)",
+            "label": "Build and push to local registry",
             "type": "shell",
-            "command": "podman build --no-cache --pull --build-arg=SILVERBLUE_IMAGE_SOURCE=quay.io/fedora-ostree-desktops/silverblue --build-arg=SILVERBLUE_POINT_RELEASE=${input:silverblue-point-release} -f ./Containerfile -t localhost:5000/redtide:latest . 2>&1 | tee build.log",
+            "command": "./scripts/build-image.sh --no-rechunk --push",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
-        },
-        {
-            "label": "Push latest image to local registry",
-            "type": "shell",
-            "command": "podman container start registry || podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:latest && podman push --format=oci localhost:5000/redtide:latest",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "Run any-setup (from system)",

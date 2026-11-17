@@ -23,3 +23,18 @@ groups:
         actions:
           - action: symlink
             pipewire: 40-upmix.conf
+
+  - title: Disks
+    description: Since fedora 42, 'systemd-remount-fs.service' fails to mount the root ('/') correctly.
+    link:
+      title: Issue
+      url: https://bugzilla.redhat.com/show_bug.cgi?id=2348934
+    settings:
+      - type: switch
+        title: Enable compression on root mount
+        subtitle: Set btrfs mount option via kernel arguments (kargs)
+        actions:
+          - action: rpmostree
+            type: kargs
+            add:
+              - rootflags=subvol=root,compress=zstd:1

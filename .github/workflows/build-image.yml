@@ -94,26 +94,40 @@ jobs:
           podman run --rm \
             --privileged \
             --security-opt label=disable \
+            -e IMAGE="${IMAGE}" \
+            -e RELEASE_TAG="${RELEASE_TAG}" \
+            -e CHANNEL="${{ inputs.channel }}" \
             -v "$(dirname "${GRAPH_ROOT}")/$(basename "${GRAPH_ROOT}"):${GRAPH_ROOT}" \
             -v "${RUNROOT}:${RUNROOT}" \
             -v "${RUNNER_TEMP}/storage.conf:/etc/containers/storage.conf:ro" \
             -v "${private_key}:/run/secrets/ostree-private-key:ro" \
             quay.io/fedora/fedora:"${FEDORA_MAJOR_VERSION}" \
-            bash -c "
+            bash -c '
               set -euxo pipefail
 
-              echo 'root:100000:65536' > /etc/subuid
-              echo 'root:100000:65536' > /etc/subgid
+              echo "root:100000:65536" > /etc/subuid
+              echo "root:100000:65536" > /etc/subgid
 
-              dnf -y install rpm-ostree
-              
+              dnf -y install rpm-ostree skopeo
+
+              PREVIOUS_BUILD=""
+              # https://github.com/bootc-dev/bootc/issues/1885 left=right panic error. It's fixed but not here yet.
+              # First test in local build when rpm-ostree updates
+              # rpm-ostree:
+              #     Version: '2026.3'
+              #     Git: 937cd35dc42acb965b72e03f662cf4e19e770277
+              # if skopeo inspect "docker://${IMAGE}:${CHANNEL}" >/dev/null 2>&1; then
+              #   PREVIOUS_BUILD="--previous-build=docker://${IMAGE}:${CHANNEL}"
+              # fi
+
               rpm-ostree compose build-chunked-oci \
                 --bootc \
                 --format-version=2 \
-                --from=${IMAGE}:build \
-                --output=containers-storage:${IMAGE}:${RELEASE_TAG} \
-                --sign-commit=ed25519=/run/secrets/ostree-private-key
-            "
+                --from="${IMAGE}:build" \
+                --output="containers-storage:${IMAGE}:${RELEASE_TAG}" \
+                --sign-commit=ed25519=/run/secrets/ostree-private-key \
+                ${PREVIOUS_BUILD}
+            '
 
       - name: Push image
         run: |

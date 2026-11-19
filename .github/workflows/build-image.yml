@@ -111,8 +111,8 @@ jobs:
                 --bootc \
                 --format-version=2 \
                 --from=${IMAGE}:build \
-                --output=containers-storage:${IMAGE}:${RELEASE_TAG}
-                --sign-commit=ed25519="$private_key"
+                --output=containers-storage:${IMAGE}:${RELEASE_TAG} \
+                --sign-commit=ed25519=/run/secrets/ostree-private-key
             "
 
       - name: Push image

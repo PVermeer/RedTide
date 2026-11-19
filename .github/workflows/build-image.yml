@@ -12,7 +12,7 @@ on:
         required: true
         type: string
     secrets:
-      COSIGN_PRIVATE_KEY:
+      OSTREE_PRIVATE_KEY:
         required: true
 
 env:
@@ -72,10 +72,17 @@ jobs:
             -t "${IMAGE}:build" \
             .
 
-      - name: Rechunk image
+      - name: Rechunk and sign image
+        env:
+          OSTREE_PRIVATE_KEY: ${{ secrets.OSTREE_PRIVATE_KEY }}
         run: |
           GRAPH_ROOT="$(podman info --format '{{.Store.GraphRoot}}')"
           RUNROOT="$(podman info --format '{{.Store.RunRoot}}')"
+
+          private_key="$(mktemp)"
+          echo "${OSTREE_PRIVATE_KEY}" > "${private_key}"
+          chmod 600 "${private_key}"
+          trap 'rm -f "${private_key}"' EXIT
 
           cat > "${RUNNER_TEMP}/storage.conf" <<EOF
           [storage]
@@ -90,6 +97,7 @@ jobs:
             -v "$(dirname "${GRAPH_ROOT}")/$(basename "${GRAPH_ROOT}"):${GRAPH_ROOT}" \
             -v "${RUNROOT}:${RUNROOT}" \
             -v "${RUNNER_TEMP}/storage.conf:/etc/containers/storage.conf:ro" \
+            -v "${private_key}:/run/secrets/ostree-private-key:ro" \
             quay.io/fedora/fedora:"${FEDORA_MAJOR_VERSION}" \
             bash -c "
               set -euxo pipefail
@@ -104,6 +112,7 @@ jobs:
                 --format-version=2 \
                 --from=${IMAGE}:build \
                 --output=containers-storage:${IMAGE}:${RELEASE_TAG}
+                --sign-commit=ed25519="$private_key"
             "
 
       - name: Push image
@@ -118,48 +127,6 @@ jobs:
           echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
 
           echo "Published digest: ${DIGEST}"
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.9.2
-
-      - name: Log in to GHCR with Cosign
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" |
-            cosign login ghcr.io \
-              -u "${{ github.actor }}" \
-              --password-stdin
-
-      - name: Sign image
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-        run: |
-          cosign sign \
-            --yes \
-            --key env://COSIGN_PRIVATE_KEY \
-            "${IMAGE}@${DIGEST}"
-
-      - name: Verify signature
-        run: |
-          if cosign verify \
-            --new-bundle-format=false \
-            --key keys/cosign-redtide-primary.pub \
-            "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
-
-            echo "Signature verified with primary key."
-            exit 0
-          fi
-
-          if cosign verify \
-            --new-bundle-format=false \
-            --key keys/cosign-redtide-secondary.pub \
-            "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
-
-            echo "Signature verified with secondary key."
-            exit 0
-          fi
-
-          echo "ERROR: Image signature could not be verified with either RedTide key."
-          exit 1
 
       - name: Publish channel tag
         run: |

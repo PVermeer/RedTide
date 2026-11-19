@@ -2,3 +2,5 @@
   install:
     - lm_sensors
     - nethogs
+    - oo7-cli
+    

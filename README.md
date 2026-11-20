@@ -25,6 +25,17 @@ An unopinionated custom Fedora Silverblue image focused on gaming and software d
    sudo ./rebase.sh
    ```
 
+## Manual rebase
+
+Optionally a manual install can be done by downloading and installing the config and keys.
+
+1. Install the config and keys from [spec-files/redtide-repo-setup](spec-files/redtide-repo-setup/) in `/etc/ostree/remotes.d/`
+2. Run:
+
+   ```sh
+   rpm-ostree rebase ostree-remote-registry:redtide:ghcr.io/pvermeer/redtide:stable
+   ```
+
 # Image variants
 
 There are three channels: `stable`, `beta` and `testing`. The images are hosted on:

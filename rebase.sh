@@ -3,39 +3,37 @@ set -euo pipefail
 
 repo_raw="https://raw.githubusercontent.com/pvermeer/redtide/main"
 
-key_dir="/etc/pki/containers"
-policy_dir="/etc/containers"
-policy="${policy_dir}/policy.json"
-policy_backup="${policy}.redtide-backup"
-registries_dir="${policy_dir}/registries.d"
-registries_config="${registries_dir}/redtide.yaml"
+ostree_registry_config_source=${repo_raw}/spec-files/redtide-repo-setup/redtide.conf
+ostree_commit_keys_source=${repo_raw}/spec-files/redtide-repo-setup/ostree-redtide.pub
+
+ostree_registry_config_destination=/etc/ostree/remotes.d/redtide.conf
+ostree_commit_keys_destination=/etc/ostree/remotes.d/ostree-redtide.pub
 
 image="ghcr.io/pvermeer/redtide:stable"
 
-primary_key="${key_dir}/redtide-primary.pub"
-secondary_key="${key_dir}/redtide-secondary.pub"
-
-restore_policy() {
+cleanup_on_error() {
     local rc=$?
     trap - EXIT
 
-    if [[ -f "$policy_backup" ]]; then
-        echo
-        echo "==> Restoring original container policy"
+    if [[ "$rc" -eq 0 ]]; then
+        return
+    fi
 
-        if cp -a "$policy_backup" "$policy"; then
-            rm -f "$policy_backup"
-            restorecon -v "$policy" 2>/dev/null || true
-            echo "Original policy restored."
-        else
-            echo "ERROR: Failed to restore original policy from $policy_backup" >&2
+    echo
+    echo "==> Something went wrong. Cleaning up..."
+
+    for file in "${installed_files[@]}"; do
+        echo "==> Removing $file"
+
+        if ! rm -f "$file"; then
+            echo "ERROR: Failed to remove $file" >&2
             rc=1
         fi
-    fi
+    done
 
     exit "$rc"
 }
-trap restore_policy EXIT
+trap cleanup_on_error EXIT
 
 require_root() {
     if [[ "${EUID}" -ne 0 ]]; then
@@ -52,104 +50,59 @@ require_command() {
     fi
 }
 
-require_root
+download_and_install() {
+    local source="$1"
+    local destination="$2"
 
+    local tmp
+    tmp=$(mktemp)
+
+    if ! wget \
+        --https-only \
+        --secure-protocol=TLSv1_2 \
+        -O "$tmp" "$source"; then
+        rm -f "$tmp"
+        return 1
+    fi
+
+    if [[ ! -s "$tmp" ]]; then
+        echo "ERROR: Downloaded file is empty: $source" >&2
+        rm -f "$tmp"
+        return 1
+    fi
+
+    if ! install -Dm0644 "$tmp" "$destination"; then
+        rm -f "$tmp"
+        return 1
+    fi
+
+    rm -f "$tmp"
+    installed_files+=("$destination")
+}
+
+require_root
 require_command wget
-require_command jq
 require_command rpm-ostree
 
-echo "==> Creating required directories"
+installed_files=()
 
-install -d -m 0755 "$key_dir"
-install -d -m 0755 "$policy_dir"
-install -d -m 0755 "$registries_dir"
+echo
+echo "==> Installing RedTide remote registry"
+echo
 
-echo "==> Downloading RedTide signing keys"
+download_and_install "$ostree_registry_config_source" "$ostree_registry_config_destination"
 
-wget \
-    --https-only \
-    --secure-protocol=TLSv1_2 \
-    -O "$primary_key" \
-    "${repo_raw}/keys/cosign-redtide-primary.pub"
+echo
+echo "==> Installing RedTide signing keys"
+echo
 
-wget \
-    --https-only \
-    --secure-protocol=TLSv1_2 \
-    -O "$secondary_key" \
-    "${repo_raw}/keys/cosign-redtide-secondary.pub"
-
-chmod 0644 "$primary_key" "$secondary_key"
-restorecon -RF "$key_dir" 2>/dev/null || true
-
-echo "==> Configuring RedTide signing keys"
-
-cat >"$registries_config" <<'EOF'
-docker:
-  ghcr.io/pvermeer/redtide:
-    use-sigstore-attachments: true
-EOF
-
-chmod 0644 "$registries_config"
-restorecon -v "$registries_config" 2>/dev/null || true
-
-if [[ ! -f "$policy" ]]; then
-    cat >"$policy" <<'EOF'
-{
-  "default": [
-    {
-      "type": "reject"
-    }
-  ],
-  "transports": {
-    "docker": {}
-  }
-}
-EOF
-fi
-
-if [[ ! -f "$policy_backup" ]]; then
-    cp -a "$policy" "$policy_backup"
-else
-    echo "WARN: Using existing policy backup: $policy_backup" >&2
-fi
-
-tmp_policy="$(mktemp)"
-
-jq \
-    --arg primary "$primary_key" \
-    --arg secondary "$secondary_key" \
-    '
-    .default = [
-        {
-            "type": "reject"
-        }
-    ]
-    |
-    .transports.docker["ghcr.io/pvermeer/redtide"] = [
-        {
-            "type": "sigstoreSigned",
-            "keyPaths": [
-                $primary,
-                $secondary
-            ],
-            "signedIdentity": {
-                "type": "matchRepository"
-            }
-        }
-    ]
-    ' \
-    "$policy" >"$tmp_policy"
-
-install -m 0644 "$tmp_policy" "$policy"
-rm -f "$tmp_policy"
-
-restorecon -v "$policy" 2>/dev/null || true
+download_and_install "$ostree_commit_keys_source" "$ostree_commit_keys_destination"
 
 echo
 echo "==> Rebasing to RedTide"
 echo
 
-rpm-ostree rebase "ostree-image-signed:registry:${image}"
+rpm-ostree rebase "ostree-remote-registry:redtide:${image}"
 
 echo
 echo "RedTide has been staged successfully."

@@ -6,7 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/deps/common/bash-color.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../.env"
 
 # Configuration
-image="localhost:5000/redtide"
+image="localhost:5000/redtide-dev"
 containerfile="./Containerfile"
 build_log="./build.log"
 registry_container="registry"
@@ -16,7 +16,7 @@ silverblue_point_release_image_source="quay.io/fedora-ostree-desktops/silverblue
 silverblue_point_release=""
 
 build_tag="build"
-output_tag="latest"
+output_tag="dev"
 
 # Build options
 no_cache=false

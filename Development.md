@@ -6,7 +6,7 @@ On host and VM
 
 ```sh
 sudo mkdir -p /etc/containers/registries.conf.d
-sudo nano /etc/containers/registries.conf.d/redtide-local.conf
+sudo nano /etc/containers/registries.conf.d/redtide-dev.conf
 ```
 
 Add
@@ -28,8 +28,7 @@ ip route | grep default | awk '{print $3}'
 ### Run local registery for rebase / update
 
 ```sh
-podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/li
-brary/registry:latest
+podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:dev
 ```
 
 Or start if already installed
@@ -41,15 +40,15 @@ podman container start registry
 ### Build and push image to registry
 
 ```sh
-podman build --pull -f ./Containerfile -t localhost:5000/redtide:latest .
+podman build --pull -f ./Containerfile -t localhost:5000/redtide-dev:dev .
 
-podman push --format=oci localhost:5000/redtide:latest
+podman push --format=oci localhost:5000/redtide-dev:dev
 ```
 
 ## Rebase / update
 
 ```sh
-rpm-ostree rebase ostree-unverified-registry:<host-ip or localhost>:5000/redtide:latest
+rpm-ostree rebase ostree-unverified-registry:<host-ip or localhost>:5000/redtide-dev:dev
 ```
 
 Or upgrade if already rebased (registry must be running on host)
@@ -82,13 +81,13 @@ This requires the image to be build with `./scripts/build-image.sh --sign`
    sudo ostree remote add \
        --no-gpg-verify \
        --sign-verify=ed25519=file:/etc/ostree/remotes.d/ostree-redtide-public.key \
-       redtide \
+       redtide-dev \
        http://<host-ip or localhost>:5000
    ```
 
 4. Rebase to secure remote
 
    ```sh
-   sudo rpm-ostree rebase ostree-remote-registry:redtide:<host-ip or localhost>:5000/redtide:latest
+   sudo rpm-ostree rebase ostree-remote-registry:redtide-dev:<host-ip or localhost>:5000/redtide-dev:dev
 
    ```

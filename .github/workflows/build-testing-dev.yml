@@ -11,6 +11,6 @@ jobs:
       packages: write
     uses: ./.github/workflows/build-image.yml
     with:
-      ref: testing-ci
+      ref: ${{ github.ref_name }}
       channel: testing-dev
     secrets: inherit

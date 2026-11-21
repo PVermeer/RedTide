@@ -68,6 +68,7 @@ RUN source ./$SCRIPTS_DIR/deps/common/env.sh
 
 COPY --from=builds $LOCAL_RPM_DIR $LOCAL_RPM_DIR
 COPY --from=builds $KMODS_RPM_DIR $KMODS_RPM_DIR
+
 COPY ./scripts/deps $SCRIPTS_DIR/deps
 COPY ./scripts/install-packages $SCRIPTS_DIR/install-packages
 COPY ./repos $REPOS_DIR
@@ -111,11 +112,6 @@ RUN --mount=type=cache,dst=/var/cache \
 COPY ./packages/vm.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \
     install-packages vm.yml
-
-COPY ./policies ${POLICIES_DIR}/
-COPY ./scripts/install-container-config $SCRIPTS_DIR/install-container-config
-RUN --mount=type=cache,dst=/var/cache \
-    install-container-config
 
 COPY ./packages/redtide.yml ${PACKAGES_DIR}/
 RUN --mount=type=cache,dst=/var/cache \

@@ -51,6 +51,15 @@
             "problemMatcher": []
         },
         {
+            "label": "Push latest dev image to local registry",
+            "type": "shell",
+            "command": "podman container start registry || podman container run -dt -p 0.0.0.0:5000:5000 --name registry docker.io/library/registry:latest && podman push --format=oci localhost:5000/redtide-dev:dev",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Run any-setup (from system)",
             "type": "shell",
             "command": "any-setup --pages-dir ./spec-files/redtide-setup/pages --configs-dir ./spec-files/redtide-setup/configs",

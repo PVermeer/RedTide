@@ -1,11 +1,15 @@
 [terra]
 name=Terra $releasever
-baseurl=https://repos.fyralabs.com/terra$releasever
-#metalink=https://tetsudou.fyralabs.com/metalink?repo=terra$releasever&arch=$basearch
+#baseurl=https://repos.fyralabs.com/terra$releasever
+metalink=https://tetsudou.fyralabs.com/metalink?repo=terra$releasever&arch=$basearch
 metadata_expire=6h
 type=rpm
 gpgcheck=1
-repo_gpgcheck=1
+# Terra currently uses a CDN based on the origin repo, so this is safe
+
+# If terra says so... above comment is from terra, so grain of salt thingy...
+# I'd rather have repo_gpg check but it's causing issues on some mirrors.
+repo_gpgcheck=0
 enabled=0
 enabled_metadata=1
 countme=1

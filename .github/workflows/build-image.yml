@@ -111,11 +111,7 @@ jobs:
               dnf -y install rpm-ostree skopeo
 
               PREVIOUS_BUILD=""
-              # https://github.com/bootc-dev/bootc/issues/1885 left=right panic error. It's fixed but not here yet.
-              # First test in local build when rpm-ostree updates
-              # rpm-ostree:
-              #     Version: '2026.3'
-              #     Git: 937cd35dc42acb965b72e03f662cf4e19e770277
+              # https://github.com/bootc-dev/bootc/issues/1885 left=right panic error
               # if skopeo inspect "docker://${IMAGE}:${CHANNEL}" >/dev/null 2>&1; then
               #   PREVIOUS_BUILD="--previous-build=docker://${IMAGE}:${CHANNEL}"
               # fi

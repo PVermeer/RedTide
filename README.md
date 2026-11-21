@@ -2,6 +2,10 @@
 
 > ⚠️ **Warning:** WIP!!!!
 
+> From 2026-11-24 Beta RedTide has changed to ostree commit signing and a rebase is needed. Change the [rebase.sh](rebase.sh) script to the beta image and run the script again to continue recieving updates.
+
+> From 2026-12-01 Stable RedTide has changed to ostree commit signing and a rebase is needed. Run the [rebase.sh](rebase.sh) script again to continue recieving updates.
+
 An unopinionated custom Fedora Silverblue image focused on gaming and software development with the following principles:
 
 - Stable and secure

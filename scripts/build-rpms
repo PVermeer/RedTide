@@ -24,6 +24,9 @@ print_rpm_files() {
 
 for spec_file in "$rpm_spec_dir"/*.spec; do
 
+    echo ""
+    echo_color "Build RPM: $spec_file"
+
     mkdir -p "${LOCAL_RPM_DIR}"
 
     echo "$rpm_spec_dir"
@@ -58,6 +61,10 @@ for spec_file in "$rpm_spec_dir"/*.spec; do
     echo_color "\nRPM Build"
 
     rpmbuild --define "_topdir $PWD/rpmbuild" -ba --noclean "./${spec_file}"
+
+    for rpm in ./rpmbuild/RPMS/**/*.rpm; do
+        rpmsign --addsign --key-id "$RPM_LOCAL_SIGN_KEY" "$rpm"
+    done
 
     print_rpm_files
 

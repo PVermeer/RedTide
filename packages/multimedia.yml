@@ -1,13 +1,18 @@
-# https://rpmfusion.org/Howto/OSTree
+# https://github.com/rpmfusion/rpmfusion-nonfree-release/blob/master/RPM-GPG-KEY-rpmfusion-nonfree-fedora-2020
 
 - repo: fedora
   install:
     - libva-utils
     - vulkan-tools
-    - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_VERSION}.noarch.rpm"
-    - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_VERSION}.noarch.rpm"
 
-- repo: fedora
+- repo:
+    - rpmfusion-free
+    - rpmfusion-free-updates
+    - rpmfusion-nonfree
+    - rpmfusion-nonfree-updates
+  repo_file:
+    - rpmfusion-free.repo
+    - rpmfusion-nonfree.repo
   install:
     - intel-media-driver
     - mesa-va-drivers-freeworld
@@ -17,7 +22,14 @@
     - gstreamer1-plugins-bad-freeworld
     - gstreamer1-plugins-ugly
 
-- repo: fedora
+- repo:
+    - rpmfusion-free
+    - rpmfusion-free-updates
+    - rpmfusion-nonfree
+    - rpmfusion-nonfree-updates
+  repo_file:
+    - rpmfusion-free.repo
+    - rpmfusion-nonfree.repo
   remove:
     - fdk-aac-free
     - libavcodec-free
@@ -31,18 +43,27 @@
   install:
     - ffmpeg
 
-- repo: fedora
+- repo:
+    - rpmfusion-free
+    - rpmfusion-free-updates
+    - rpmfusion-nonfree
+    - rpmfusion-nonfree-updates
+  repo_file:
+    - rpmfusion-free.repo
+    - rpmfusion-nonfree.repo
   install:
     - mesa-vulkan-drivers-freeworld
   remove:
     - mesa-vulkan-drivers
 
 # 32 bit for steam
-- repo: fedora
+- repo:
+    - rpmfusion-free
+    - rpmfusion-free-updates
+    - rpmfusion-nonfree
+    - rpmfusion-nonfree-updates
+  repo_file:
+    - rpmfusion-free.repo
+    - rpmfusion-nonfree.repo
   install:
     - mesa-vulkan-drivers-freeworld.i686
-
-- repo: fedora
-  remove:
-    - rpmfusion-free-release
-    - rpmfusion-nonfree-release

@@ -12,7 +12,7 @@ on:
         required: true
         type: string
     secrets:
-      COSIGN_PRIVATE_KEY:
+      OSTREE_PRIVATE_KEY:
         required: true
 
 env:
@@ -29,7 +29,7 @@ jobs:
       contents: write
       packages: write
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -40,18 +40,21 @@ jobs:
 
       - name: Set release variables
         run: |
+          FEDORA_MAJOR_VERSION="$(grep -m1 '^ARG FEDORA_MAJOR_VERSION=' ./Containerfile | cut -d= -f2)"
           BUILD_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           COMMIT="$(git rev-parse HEAD)"
           RELEASE_TAG="${{ inputs.channel }}-${BUILD_TIMESTAMP}"
 
+          echo "FEDORA_MAJOR_VERSION=${FEDORA_MAJOR_VERSION}" >> "$GITHUB_ENV"
           echo "BUILD_TIMESTAMP=${BUILD_TIMESTAMP}" >> "$GITHUB_ENV"
           echo "COMMIT=${COMMIT}" >> "$GITHUB_ENV"
           echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
 
-          echo "Git ref:     ${{ inputs.ref }}"
-          echo "Git commit:  ${COMMIT}"
-          echo "Channel:     ${{ inputs.channel }}"
-          echo "Release tag: ${RELEASE_TAG}"
+          echo "Fedora version: ${FEDORA_MAJOR_VERSION}"
+          echo "Git ref:        ${{ inputs.ref }}"
+          echo "Git commit:     ${COMMIT}"
+          echo "Channel:        ${{ inputs.channel }}"
+          echo "Release tag:    ${RELEASE_TAG}"
 
       - name: Log in to GHCR
         run: |
@@ -66,8 +69,61 @@ jobs:
             -f ./Containerfile \
             --label "org.opencontainers.image.revision=${COMMIT}" \
             --label "org.opencontainers.image.created=${BUILD_TIMESTAMP}" \
-            -t "${IMAGE}:${RELEASE_TAG}" \
+            -t "${IMAGE}:build" \
             .
+
+      - name: Rechunk and sign image
+        env:
+          OSTREE_PRIVATE_KEY: ${{ secrets.OSTREE_PRIVATE_KEY }}
+        run: |
+          GRAPH_ROOT="$(podman info --format '{{.Store.GraphRoot}}')"
+          RUNROOT="$(podman info --format '{{.Store.RunRoot}}')"
+
+          private_key="$(mktemp)"
+          echo "${OSTREE_PRIVATE_KEY}" > "${private_key}"
+          chmod 600 "${private_key}"
+          trap 'rm -f "${private_key}"' EXIT
+
+          cat > "${RUNNER_TEMP}/storage.conf" <<EOF
+          [storage]
+          driver = "overlay"
+          runroot = "${RUNROOT}"
+          graphroot = "${GRAPH_ROOT}"
+          EOF
+
+          podman run --rm \
+            --privileged \
+            --security-opt label=disable \
+            -e IMAGE="${IMAGE}" \
+            -e RELEASE_TAG="${RELEASE_TAG}" \
+            -e CHANNEL="${{ inputs.channel }}" \
+            -v "$(dirname "${GRAPH_ROOT}")/$(basename "${GRAPH_ROOT}"):${GRAPH_ROOT}" \
+            -v "${RUNROOT}:${RUNROOT}" \
+            -v "${RUNNER_TEMP}/storage.conf:/etc/containers/storage.conf:ro" \
+            -v "${private_key}:/run/secrets/ostree-private-key:ro" \
+            quay.io/fedora/fedora:"${FEDORA_MAJOR_VERSION}" \
+            bash -c '
+              set -euxo pipefail
+
+              echo "root:100000:65536" > /etc/subuid
+              echo "root:100000:65536" > /etc/subgid
+
+              dnf -y install rpm-ostree skopeo
+
+              PREVIOUS_BUILD=""
+              # https://github.com/bootc-dev/bootc/issues/1885 left=right panic error
+              # if skopeo inspect "docker://${IMAGE}:${CHANNEL}" >/dev/null 2>&1; then
+              #   PREVIOUS_BUILD="--previous-build=docker://${IMAGE}:${CHANNEL}"
+              # fi
+
+              rpm-ostree compose build-chunked-oci \
+                --bootc \
+                --format-version=2 \
+                --from="${IMAGE}:build" \
+                --output="containers-storage:${IMAGE}:${RELEASE_TAG}" \
+                --sign-commit=ed25519=/run/secrets/ostree-private-key \
+                ${PREVIOUS_BUILD}
+            '
 
       - name: Push image
         run: |
@@ -81,48 +137,6 @@ jobs:
           echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
 
           echo "Published digest: ${DIGEST}"
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.9.2
-
-      - name: Log in to GHCR with Cosign
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" |
-            cosign login ghcr.io \
-              -u "${{ github.actor }}" \
-              --password-stdin
-
-      - name: Sign image
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-        run: |
-          cosign sign \
-            --yes \
-            --key env://COSIGN_PRIVATE_KEY \
-            "${IMAGE}@${DIGEST}"
-
-      - name: Verify signature
-        run: |
-          if cosign verify \
-            --new-bundle-format=false \
-            --key keys/cosign-redtide-primary.pub \
-            "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
-
-            echo "Signature verified with primary key."
-            exit 0
-          fi
-
-          if cosign verify \
-            --new-bundle-format=false \
-            --key keys/cosign-redtide-secondary.pub \
-            "${IMAGE}@${DIGEST}" >/dev/null 2>&1; then
-
-            echo "Signature verified with secondary key."
-            exit 0
-          fi
-
-          echo "ERROR: Image signature could not be verified with either RedTide key."
-          exit 1
 
       - name: Publish channel tag
         run: |

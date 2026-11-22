@@ -1,0 +1,78 @@
+#!/bin/bash
+
+set -e
+set -x
+
+primary_monitor_width=""
+primary_monitor_height=""
+
+set_primary_monitor_resolution() {
+    primary=$(gdctl show | awk '/Primary: yes/{getline; getline; sub(/.*└──/, ""); sub(/ .*/, ""); print; exit}')
+
+    resolution=$(gdctl show | awk -v p="$primary" '
+$0 ~ "Monitor " p " " { found=1 }
+found && /Current mode/ { getline; match($0, /[0-9]+x[0-9]+/); print substr($0,RSTART,RLENGTH); exit }
+')
+
+    width=${resolution%x*}
+    height=${resolution#*x}
+
+    primary_monitor_width="$width"
+    primary_monitor_height="$height"
+}
+
+steamos_launch_args="\
+    -steamos3 \
+    -steamdeck \
+    -steampal"
+
+if [ "$1" == "gamescope" ]; then
+
+    set_primary_monitor_resolution
+
+    display=""
+    if [ -n "$SUNSHINE_CLIENT_WIDTH" ]; then
+        display="${display} -W $SUNSHINE_CLIENT_WIDTH"
+    fi
+    if [ -n "$SUNSHINE_CLIENT_HEIGHT" ]; then
+        display="${display} -H $SUNSHINE_CLIENT_HEIGHT"
+    fi
+    if [ -n "$SUNSHINE_CLIENT_FPS" ]; then
+        display="${display} -r $SUNSHINE_CLIENT_FPS"
+    fi
+
+    if [ -n "$GAMESCOPE_WIDTH" ]; then
+        display="${display} -W $GAMESCOPE_WIDTH"
+    fi
+    if [ -n "$GAMESCOPE_HEIGHT" ]; then
+        display="${display} -H $GAMESCOPE_HEIGHT"
+    fi
+    if [ -n "$GAMESCOPE_FPS" ]; then
+        display="${display} -r $GAMESCOPE_FPS"
+    fi
+
+    if [ -z "$display" ] && [ -n "$primary_monitor_width" ] && [ -n "$primary_monitor_height" ]; then
+        display=" -W $primary_monitor_width -H $primary_monitor_height"
+    fi
+
+    if [ "$SUNSHINE_CLIENT_HDR" = "true" ] || [ "$GAMESCOPE_HDR" = "true" ]; then
+        display="${display} --hdr-enabled"
+    fi
+
+    # shellcheck disable=SC2086
+    gamescope \
+        --fullscreen \
+        --hide-cursor-delay 3000 \
+        --fade-out-duration 200 \
+        --force-grab-cursor \
+        --mangoapp \
+        --steam \
+        $display \
+        -- steam \
+        $steamos_launch_args \
+        -gamepadui
+else
+    # shellcheck disable=SC2086
+    steam \
+        $steamos_launch_args
+fi

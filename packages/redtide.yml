@@ -6,3 +6,4 @@
 - repo: local
   install:
     - redtide-setup
+    - redtide-repo-setup

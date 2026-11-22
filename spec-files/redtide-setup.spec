@@ -1,7 +1,7 @@
 Name: redtide-setup
 Version: 0.0.1
 Release: 0%{?dist}
-License: GPL-3.0 license
+License: GPL-3.0-only
 Summary: Setup anything with actions
 Url: https://github.com/PVermeer/RedTide
 

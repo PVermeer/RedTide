@@ -2,6 +2,10 @@
 
 > ⚠️ **Warning:** WIP!!!!
 
+> 2026-11-24 Beta RedTide has changed to ostree commit signing and a rebase is needed. Change the [rebase.sh](rebase.sh) script to the beta image and run the script again to continue recieving updates.
+
+> 2026-12-01 Stable RedTide has changed to ostree commit signing and a rebase is needed. Run the [rebase.sh](rebase.sh) script again to continue recieving updates.
+
 An unopinionated custom Fedora Silverblue image focused on gaming and software development with the following principles:
 
 - Stable and secure
@@ -23,6 +27,19 @@ An unopinionated custom Fedora Silverblue image focused on gaming and software d
 
    # Run as root
    sudo ./rebase.sh
+   ```
+
+   _note: The rebase script restores `/etc/containers/policy.json` to the default. Backup your changes. This is longer needed after migration to ostree commit signing has completed._
+
+## Manual rebase
+
+Optionally a manual install can be done by downloading and installing the config and keys.
+
+1. Install the config and keys from [spec-files/redtide-repo-setup](spec-files/redtide-repo-setup/) in `/etc/ostree/remotes.d/`
+2. Run:
+
+   ```sh
+   rpm-ostree rebase ostree-remote-registry:redtide:ghcr.io/pvermeer/redtide:stable
    ```
 
 # Image variants

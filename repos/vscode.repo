@@ -3,5 +3,5 @@ name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
 enabled=0
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-vscode
+gpgkey=file:///usr/etc/pki/rpm-gpg/redtide/RPM-GPG-KEY-vscode
 skip_if_unavailable=False

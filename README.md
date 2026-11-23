@@ -135,7 +135,7 @@ At the end of the two-week window, the release workflow:
 2. Promotes the current beta image to `stable`.
 3. Builds a new beta image with the changes from the completed merge window and incorporates upstream changes.
 
-The release workflow runs every other Monday at 08:00 UTC (or whenever github feels like it) and can also be triggered manually.
+The release workflow runs every other Sunday at 18:00 UTC (or several hours later, whenever GitHub Actions feels like it) and can also be triggered manually.
 
 ## Image / Git Relationship
 

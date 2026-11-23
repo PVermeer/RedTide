@@ -2,7 +2,7 @@ name: Release
 
 on:
   schedule:
-    - cron: "0 8 * * 1" # Every Monday at 08:00 UTC. Only even weeks are release weeks.
+    - cron: "00 18 * * 0" # Every sunday at 18:00 UTC. Only even weeks are release weeks.
   workflow_dispatch:
 
 concurrency:

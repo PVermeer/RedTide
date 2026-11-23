@@ -140,22 +140,14 @@ jobs:
 
       - name: Publish channel tag
         run: |
-          podman tag \
-            "${IMAGE}:${RELEASE_TAG}" \
-            "${IMAGE}:${{ inputs.channel }}"
-
-          podman push \
-            --format=oci \
-            "${IMAGE}:${{ inputs.channel }}"
+          skopeo copy --all --preserve-digests \
+            "docker://${IMAGE}@${DIGEST}" \
+            "docker://${IMAGE}:${{ inputs.channel }}"
 
           if [ "${{ inputs.channel }}" = "stable" ]; then
-            podman tag \
-              "${IMAGE}:${RELEASE_TAG}" \
-              "${IMAGE}:latest"
-
-            podman push \
-              --format=oci \
-              "${IMAGE}:latest"
+            skopeo copy --all --preserve-digests \
+              "docker://${IMAGE}@${DIGEST}" \
+              "docker://${IMAGE}:latest"
           fi
 
       - name: Create git release tag

@@ -1,4 +1,4 @@
-# Redtide
+# RedTide Silverblue community image
 
 > ⚠️ **Warning:** WIP!!!!
 
@@ -10,7 +10,7 @@ An unopinionated custom Fedora Silverblue image focused on gaming and software d
 
 - Stable and secure
 - Stays close to Fedora
-- Don't mess with user space (no crappy user scripts)
+- Don't mess with the user (no crappy user scripts)
 
 # Install
 
@@ -82,7 +82,7 @@ See [packages](packages) for the full package install list.
 
 | Package                 | Description                                                            | Source                                                                   |
 | ----------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| gamescope-session-steam | Adds a gamescope session to the login                                  | [terra](https://terrapkg.com/)                                           |
+| gamescope-session-steam | Adds a gamescope session to the login                                  | [local](spec-files/steamos.spec)                                         |
 | akmod-xonedo            | Kernel module for newer Xbox controllers with wireless adapter support | [terra](https://terrapkg.com/)                                           |
 | akmod-xpadneo           | Kernel module for older Xbox controllers with bluetooth support        | [terra](https://terrapkg.com/)                                           |
 | sunshine                | Self-hosted game stream host for Moonlight                             | [copr](https://copr.fedorainfracloud.org/coprs/pvermeer/sunshine)        |
@@ -135,7 +135,7 @@ At the end of the two-week window, the release workflow:
 2. Promotes the current beta image to `stable`.
 3. Builds a new beta image with the changes from the completed merge window and incorporates upstream changes.
 
-The release workflow runs every other Monday at 08:00 UTC and can also be triggered manually.
+The release workflow runs every other Monday at 08:00 UTC (or whenever github feels like it) and can also be triggered manually.
 
 ## Image / Git Relationship
 

@@ -10,9 +10,6 @@
     - rpmfusion-free-updates
     - rpmfusion-nonfree
     - rpmfusion-nonfree-updates
-  repo_file:
-    - rpmfusion-free.repo
-    - rpmfusion-nonfree.repo
   install:
     - intel-media-driver
     - mesa-va-drivers-freeworld
@@ -27,9 +24,6 @@
     - rpmfusion-free-updates
     - rpmfusion-nonfree
     - rpmfusion-nonfree-updates
-  repo_file:
-    - rpmfusion-free.repo
-    - rpmfusion-nonfree.repo
   remove:
     - fdk-aac-free
     - libavcodec-free
@@ -48,9 +42,6 @@
     - rpmfusion-free-updates
     - rpmfusion-nonfree
     - rpmfusion-nonfree-updates
-  repo_file:
-    - rpmfusion-free.repo
-    - rpmfusion-nonfree.repo
   install:
     - mesa-vulkan-drivers-freeworld
   remove:
@@ -62,8 +53,5 @@
     - rpmfusion-free-updates
     - rpmfusion-nonfree
     - rpmfusion-nonfree-updates
-  repo_file:
-    - rpmfusion-free.repo
-    - rpmfusion-nonfree.repo
   install:
     - mesa-vulkan-drivers-freeworld.i686

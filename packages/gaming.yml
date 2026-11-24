@@ -3,9 +3,6 @@
     - rpmfusion-free-updates
     - rpmfusion-nonfree
     - rpmfusion-nonfree-updates
-  repo_file:
-    - rpmfusion-free.repo
-    - rpmfusion-nonfree.repo
   install:
     - steam
     - steam-devices
@@ -17,7 +14,6 @@
     - mangohud
 
 - repo: terra
-  repo_file: terra.repo
   kmods:
     - akmod: xonedo
       package: akmod-xonedo
@@ -29,11 +25,9 @@
     - steamos
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:sunshine
-  repo_file: pvermeer-sunshine.repo
   install:
     - sunshine
 
 - repo: copr:copr.fedorainfracloud.org:pvermeer:virtual-display
-  repo_file: pvermeer-virtual-display.repo
   install:
     - virtual-display

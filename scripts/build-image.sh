@@ -3,7 +3,10 @@
 set -Eeuo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/deps/common/bash-color.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/../.env"
+if [ -f "$(dirname "${BASH_SOURCE[0]}")/../.env" ]; then
+    # shellcheck disable=SC1091
+    source "$(dirname "${BASH_SOURCE[0]}")/../.env"
+fi
 
 # Configuration
 image="localhost:5000/redtide-dev"

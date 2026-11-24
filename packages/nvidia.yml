@@ -11,9 +11,6 @@
     - rpmfusion-free-updates
     - rpmfusion-nonfree
     - rpmfusion-nonfree-updates
-  repo_file:
-    - rpmfusion-free.repo
-    - rpmfusion-nonfree.repo
   install:
     - xorg-x11-drv-nvidia
     - xorg-x11-drv-nvidia-cuda

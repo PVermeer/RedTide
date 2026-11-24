@@ -13,4 +13,4 @@ repo_gpgcheck=0
 enabled=0
 enabled_metadata=1
 countme=1
-gpgkey=file:///usr/etc/pki/rpm-gpg/redtide/RPM-GPG-KEY-terra
+gpgkey=file:///usr/share/pki/rpm-gpg/redtide/RPM-GPG-KEY-terra

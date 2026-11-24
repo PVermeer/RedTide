@@ -27,13 +27,6 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
             mapfile -t repos < <(yq -r '.repo' <<<"$repo_packages")
         fi
 
-        if [ "$(yq -r '.repo_file | tag' <<<"$repo_packages")" = "!!seq" ]; then
-            mapfile -t repo_files < <(yq -r '.repo_file[]' <<<"$repo_packages")
-        else
-            # shellcheck disable=SC2034
-            mapfile -t repo_files < <(yq -r '.repo_file' <<<"$repo_packages")
-        fi
-
         disable_repo=$(yq '.disable_repo' <<<"$repo_packages")
         mapfile -t kmod_packages < <(yq -r '.kmods[].package' <<<"$repo_packages")
         mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
@@ -42,9 +35,11 @@ for package_config in "$PACKAGES_DIR"/*.yml; do
 
             echo_color "Installing kmod packages for $package_config: '${repos[*]}'"
 
-            enable_repos repo_files repos
+            enable_repos repos
             dnf -y install "${kmod_packages[@]}"
-            [ "$disable_repo" = "false" ] || disable_repos repo_files repos
+            if [ ! "$disable_repo" = "false" ]; then
+                disable_repos repos
+            fi
 
             echo_color "Killing potential akmod background builds from post scripts"
 

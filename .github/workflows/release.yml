@@ -2,7 +2,7 @@ name: Release
 
 on:
   schedule:
-    - cron: "0 8 * * 1" # Every Monday at 08:00 UTC. Only even weeks are release weeks.
+    - cron: "00 18 * * 0" # Every sunday at 18:00 UTC. Only even weeks are release weeks.
   workflow_dispatch:
 
 concurrency:
@@ -132,17 +132,17 @@ jobs:
 
       - name: Promote beta to stable
         run: |
-          skopeo copy \
+          skopeo copy --all --preserve-digests \
             "docker://${IMAGE}@${{ needs.merge-stable.outputs.beta_digest }}" \
             "docker://${IMAGE}:stable"
 
-          skopeo copy \
+          skopeo copy --all --preserve-digests \
             "docker://${IMAGE}@${{ needs.merge-stable.outputs.beta_digest }}" \
             "docker://${IMAGE}:latest"
 
       - name: Publish stable image tag
         run: |
-          skopeo copy \
+          skopeo copy --all --preserve-digests \
             "docker://${IMAGE}@${{ needs.merge-stable.outputs.beta_digest }}" \
             "docker://${IMAGE}:${RELEASE_TAG}"
 

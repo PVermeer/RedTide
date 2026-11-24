@@ -34,11 +34,9 @@
     - yq
 
 - repo: code
-  repo_file: vscode.repo
   install:
     - code
 
 - repo: terra
-  repo_file: terra.repo
   install:
     - zed

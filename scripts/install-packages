@@ -33,13 +33,6 @@ for repo_packages in "${repos[@]}"; do
 		mapfile -t repos < <(yq -r '.repo' <<<"$repo_packages")
 	fi
 
-	if [ "$(yq -r '.repo_file | tag' <<<"$repo_packages")" = "!!seq" ]; then
-		mapfile -t repo_files < <(yq -r '.repo_file[]' <<<"$repo_packages")
-	else
-		# shellcheck disable=SC2034
-		mapfile -t repo_files < <(yq -r '.repo_file' <<<"$repo_packages")
-	fi
-
 	disable_repo=$(yq '.disable_repo' <<<"$repo_packages")
 	pre_install_command=$(yq '.pre_install_command' <<<"$repo_packages")
 	post_install_command=$(yq '.post_install_command' <<<"$repo_packages")
@@ -49,7 +42,7 @@ for repo_packages in "${repos[@]}"; do
 	mapfile -t kmod_names < <(yq -r '.kmods[].akmod' <<<"$repo_packages")
 	mapfile -t dconf_configs < <(yq '.dconf[]' <<<"$repo_packages")
 
-	enable_repos repo_files repos
+	enable_repos repos
 
 	# Kmods
 	if [ -n "${kmod_names[*]}" ]; then
@@ -133,7 +126,9 @@ for repo_packages in "${repos[@]}"; do
 		fi
 	fi
 
-	[ "$disable_repo" = "false" ] || disable_repos repo_files repos
+	if [ ! "$disable_repo" = "false" ]; then
+		disable_repos repos
+	fi
 
 	# Extension config
 	if [ -n "${packages_extensions[*]}" ]; then

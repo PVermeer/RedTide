@@ -83,3 +83,7 @@
     - id: wireless-hid@chlumskyvaclav.gmail.com
       package: gnome-shell-extension-wireless-hid
       enable: true
+
+    - id: rgb-range-quicksettings@yofuness.github.io
+      package: gnome-shell-extension-rgb-range-quicksettings
+      enable: true

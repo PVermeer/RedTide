@@ -128,7 +128,6 @@ jobs:
       - name: Push image
         run: |
           podman push \
-            --format=oci \
             --digestfile "${RUNNER_TEMP}/digest" \
             "${IMAGE}:${RELEASE_TAG}"
 

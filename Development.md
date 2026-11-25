@@ -42,7 +42,7 @@ podman container start registry
 ```sh
 podman build --pull -f ./Containerfile -t localhost:5000/redtide-dev:dev .
 
-podman push --format=oci localhost:5000/redtide-dev:dev
+podman push localhost:5000/redtide-dev:dev
 ```
 
 ## Rebase / update

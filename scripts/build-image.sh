@@ -186,7 +186,6 @@ if [[ "$push" == true ]]; then
     echo_color "Pushing image"
 
     podman push \
-        --format=oci \
         "${image}:${output_tag}" \
         2>&1 | tee -a "$build_log"
 fi

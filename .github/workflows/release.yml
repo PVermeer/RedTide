@@ -33,7 +33,7 @@ jobs:
             exit 0
           fi
 
-          WEEK="$(date -u +%V)"
+          WEEK="$(date -u -d 'tomorrow' +%V)"
 
           if (( 10#$WEEK % 2 == 0 )); then
             echo "ISO week ${WEEK}: release week."
